@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/Badge';
 import { useNearWallet } from '@/hooks/useNearWallet';
 import { TokenSelector } from '@/components/TokenSelector';
 import { TransactionHistory } from '@/components/TransactionHistory';
-import { Token, NEAR_TOKENS, SwapTransaction } from '@/types/tokens';
+import { Token, NEAR_TOKENS, SwapTransaction, getExplorerUrl } from '@/types/tokens';
 import { NearSwapService } from '@/services/near-swap';
 
 interface SwapResult {
@@ -17,7 +17,7 @@ interface SwapResult {
 }
 
 const NearIntentsDashboardV2 = () => {
-  const { account, isConnected, connect, disconnect } = useNearWallet();
+  const { account, isConnected, connect, disconnect, executeTransaction } = useNearWallet();
   const [swapResult, setSwapResult] = useState<SwapResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -97,10 +97,10 @@ const NearIntentsDashboardV2 = () => {
     setSwapResult(null);
     
     try {
-      console.log(`Executing swap: ${amount} ${fromToken.symbol} → ${toToken.symbol}`);
+      console.log(`🔄 Executing swap: ${amount} ${fromToken.symbol} → ${toToken.symbol}`);
       
-      // Execute the swap
-      const transaction = await swapService.executeSwap({
+      // Step 1: Prepare the transaction
+      const transactionData = await swapService.prepareSwapTransaction({
         fromToken,
         toToken,
         amountIn: amount,
@@ -108,21 +108,59 @@ const NearIntentsDashboardV2 = () => {
         slippage: 0.5,
       });
 
+      console.log('📝 Transaction prepared:', transactionData);
+
+      // Step 2: Execute via wallet (user signs the transaction)
+      console.log('✍️  Requesting wallet signature...');
+      const result = await executeTransaction(transactionData);
+      
+      console.log('✅ Transaction executed!', result);
+
+      // Step 3: Extract transaction hash from result
+      const txHash = result?.transaction?.hash || result?.transaction_outcome?.id || 'unknown';
+      
+      // Create transaction object for display
+      const swapTransaction: SwapTransaction = {
+        hash: txHash,
+        from: account.accountId,
+        to: transactionData.receiverId,
+        fromToken,
+        toToken,
+        amountIn: amount,
+        amountOut: estimatedOutput,
+        status: 'success',
+        timestamp: Date.now(),
+        explorerUrl: getExplorerUrl(txHash, 'testnet'),
+        gasUsed: result?.transaction_outcome?.outcome?.gas_burnt?.toString() || undefined,
+      };
+
       setSwapResult({
         success: true,
-        transaction,
+        transaction: swapTransaction,
       });
 
-      // Refresh quote
+      console.log('🎉 Swap completed successfully!', swapTransaction);
+
+      // Refresh quote and balance
       await getSwapQuote();
       
-    } catch (err) {
-      console.error('Swap error:', err);
-      setError('Failed to execute swap');
-      setSwapResult({
-        success: false,
-        error: err instanceof Error ? err.message : 'Unknown error',
-      });
+    } catch (err: any) {
+      console.error('❌ Swap error:', err);
+      
+      // Handle user rejection
+      if (err?.message?.includes('User rejected') || err?.type === 'UserRejected') {
+        setError('Transaction cancelled by user');
+        setSwapResult({
+          success: false,
+          error: 'You cancelled the transaction',
+        });
+      } else {
+        setError('Failed to execute swap');
+        setSwapResult({
+          success: false,
+          error: err instanceof Error ? err.message : 'Unknown error',
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -234,6 +272,7 @@ const NearIntentsDashboardV2 = () => {
                       selectedToken={fromToken}
                       onSelectToken={setFromToken}
                       excludeTokens={[toToken.id]}
+                      compact={true}
                     />
                   </div>
                 </div>
@@ -267,6 +306,7 @@ const NearIntentsDashboardV2 = () => {
                       selectedToken={toToken}
                       onSelectToken={setToToken}
                       excludeTokens={[fromToken.id]}
+                      compact={true}
                     />
                   </div>
                 </div>

@@ -1,9 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Token, NEAR_TOKENS } from '@/types/tokens';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
 
 interface TokenSelectorProps {
   selectedToken: Token;
@@ -11,6 +9,7 @@ interface TokenSelectorProps {
   label?: string;
   disabled?: boolean;
   excludeTokens?: string[]; // Token IDs to exclude
+  compact?: boolean;
 }
 
 export function TokenSelector({ 
@@ -18,9 +17,11 @@ export function TokenSelector({
   onSelectToken, 
   label = 'Select Token',
   disabled = false,
-  excludeTokens = []
+  excludeTokens = [],
+  compact = false
 }: TokenSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const availableTokens = Object.values(NEAR_TOKENS).filter(
     token => !excludeTokens.includes(token.id)
@@ -31,22 +32,104 @@ export function TokenSelector({
     setIsOpen(false);
   };
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  if (compact) {
+    return (
+      <div className="relative inline-block" ref={dropdownRef}>
+        <button
+          onClick={() => !disabled && setIsOpen(!isOpen)}
+          disabled={disabled}
+          className="flex items-center space-x-2 px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:border-blue-400 dark:hover:border-blue-500 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+        >
+          <span className="text-2xl">{selectedToken.icon}</span>
+          <span className="font-semibold text-slate-900 dark:text-slate-100">
+            {selectedToken.symbol}
+          </span>
+          <svg 
+            className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {isOpen && (
+          <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 z-50 max-h-96 overflow-hidden">
+            <div className="p-2 border-b border-slate-200 dark:border-slate-700">
+              <div className="px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                Select Token
+              </div>
+            </div>
+            <div className="max-h-80 overflow-y-auto p-2">
+              {availableTokens.map((token) => (
+                <button
+                  key={token.id}
+                  onClick={() => handleSelectToken(token)}
+                  className={`w-full flex items-center space-x-3 px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all ${
+                    selectedToken.id === token.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                  }`}
+                >
+                  <span className="text-3xl">{token.icon}</span>
+                  <div className="flex-1 text-left">
+                    <div className="font-semibold text-slate-900 dark:text-slate-100">
+                      {token.symbol}
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                      {token.name}
+                    </div>
+                  </div>
+                  {selectedToken.id === token.id && (
+                    <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div className="relative">
-      <label className="text-sm font-medium text-slate-800 dark:text-slate-300 mb-2 block">
-        {label}
-      </label>
+    <div className="relative w-full" ref={dropdownRef}>
+      {label && (
+        <label className="text-sm font-medium text-slate-800 dark:text-slate-300 mb-2 block">
+          {label}
+        </label>
+      )}
       
       {/* Selected Token Display */}
       <button
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
-        className="w-full flex items-center justify-between px-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg hover:border-slate-400 dark:hover:border-slate-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        type="button"
+        className="w-full flex items-center justify-between px-4 py-3.5 bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 rounded-xl hover:border-blue-400 dark:hover:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
       >
         <div className="flex items-center space-x-3">
-          <span className="text-2xl">{selectedToken.icon}</span>
+          <span className="text-3xl">{selectedToken.icon}</span>
           <div className="text-left">
-            <div className="font-medium text-slate-900 dark:text-slate-100">
+            <div className="font-semibold text-slate-900 dark:text-slate-100 text-lg">
               {selectedToken.symbol}
             </div>
             <div className="text-xs text-slate-500 dark:text-slate-400">
@@ -66,138 +149,45 @@ export function TokenSelector({
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <>
-          {/* Overlay */}
-          <div 
-            className="fixed inset-0 z-40" 
-            onClick={() => setIsOpen(false)}
-          />
-          
-          {/* Token List */}
-          <Card className="absolute z-50 w-full mt-2 max-h-80 overflow-y-auto shadow-xl">
-            <div className="p-2">
-              <div className="px-3 py-2 text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
-                Select a token
-              </div>
-              
-              {availableTokens.map((token) => (
-                <button
-                  key={token.id}
-                  onClick={() => handleSelectToken(token)}
-                  className="w-full flex items-center space-x-3 px-3 py-3 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                >
-                  <span className="text-2xl">{token.icon}</span>
-                  <div className="flex-1 text-left">
-                    <div className="font-medium text-slate-900 dark:text-slate-100">
-                      {token.symbol}
-                    </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">
-                      {token.name}
-                    </div>
-                  </div>
-                  {selectedToken.id === token.id && (
-                    <svg 
-                      className="w-5 h-5 text-green-500" 
-                      fill="currentColor" 
-                      viewBox="0 0 20 20"
-                    >
-                      <path 
-                        fillRule="evenodd" 
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
-                        clipRule="evenodd" 
-                      />
-                    </svg>
-                  )}
-                </button>
-              ))}
+        <div className="absolute w-full mt-2 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border-2 border-slate-200 dark:border-slate-700 z-50 overflow-hidden">
+          <div className="p-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
+            <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+              Select a token
             </div>
-          </Card>
-        </>
+          </div>
+          <div className="max-h-80 overflow-y-auto p-2">
+            {availableTokens.map((token) => (
+              <button
+                key={token.id}
+                onClick={() => handleSelectToken(token)}
+                type="button"
+                className={`w-full flex items-center space-x-3 px-4 py-3.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all ${
+                  selectedToken.id === token.id ? 'bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-500' : ''
+                }`}
+              >
+                <span className="text-3xl flex-shrink-0">{token.icon}</span>
+                <div className="flex-1 text-left min-w-0">
+                  <div className="font-semibold text-slate-900 dark:text-slate-100">
+                    {token.symbol}
+                  </div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                    {token.name}
+                  </div>
+                </div>
+                {selectedToken.id === token.id && (
+                  <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
 }
 
-// Compact version for inline use
-export function TokenSelectorCompact({ 
-  selectedToken, 
-  onSelectToken, 
-  disabled = false,
-  excludeTokens = []
-}: TokenSelectorProps) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const availableTokens = Object.values(NEAR_TOKENS).filter(
-    token => !excludeTokens.includes(token.id)
-  );
-
-  const handleSelectToken = (token: Token) => {
-    onSelectToken(token);
-    setIsOpen(false);
-  };
-
-  return (
-    <div className="relative inline-block">
-      <button
-        onClick={() => !disabled && setIsOpen(!isOpen)}
-        disabled={disabled}
-        className="flex items-center space-x-2 px-3 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <span className="text-xl">{selectedToken.icon}</span>
-        <span className="font-medium text-slate-900 dark:text-slate-100">
-          {selectedToken.symbol}
-        </span>
-        <svg 
-          className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-
-      {isOpen && (
-        <>
-          <div 
-            className="fixed inset-0 z-40" 
-            onClick={() => setIsOpen(false)}
-          />
-          
-          <Card className="absolute z-50 right-0 mt-2 w-64 max-h-80 overflow-y-auto shadow-xl">
-            <div className="p-2">
-              {availableTokens.map((token) => (
-                <button
-                  key={token.id}
-                  onClick={() => handleSelectToken(token)}
-                  className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                >
-                  <span className="text-xl">{token.icon}</span>
-                  <div className="flex-1 text-left">
-                    <div className="font-medium text-slate-900 dark:text-slate-100 text-sm">
-                      {token.symbol}
-                    </div>
-                  </div>
-                  {selectedToken.id === token.id && (
-                    <svg 
-                      className="w-4 h-4 text-green-500" 
-                      fill="currentColor" 
-                      viewBox="0 0 20 20"
-                    >
-                      <path 
-                        fillRule="evenodd" 
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
-                        clipRule="evenodd" 
-                      />
-                    </svg>
-                  )}
-                </button>
-              ))}
-            </div>
-          </Card>
-        </>
-      )}
-    </div>
-  );
-}
 
