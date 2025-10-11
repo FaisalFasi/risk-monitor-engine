@@ -1,6 +1,7 @@
 // Service for executing token swaps on NEAR using Ref Finance
 
 import { Token, SwapQuote, SwapTransaction, parseTokenAmount, formatTokenAmount, getExplorerUrl } from '@/types/tokens';
+import { priceService } from './price-service';
 
 export interface SwapOptions {
   fromToken: Token;
@@ -201,38 +202,20 @@ export class NearSwapService {
   }
 
   /**
-   * Get exchange rate between two tokens
-   * In production, fetch from Ref Finance or price oracle
+   * Get exchange rate between two tokens using LIVE market prices
+   * Fetches from CoinGecko API with fallback to cached prices
    */
   private async getExchangeRate(fromToken: Token, toToken: Token): Promise<number> {
-    // Simulate exchange rates
-    const rates: Record<string, Record<string, number>> = {
-      NEAR: {
-        USDC: 4.50,    // 1 NEAR = 4.50 USDC
-        USDT: 4.48,    // 1 NEAR = 4.48 USDT
-        DAI: 4.49,     // 1 NEAR = 4.49 DAI
-        WETH: 0.0013,  // 1 NEAR = 0.0013 WETH
-        WBTC: 0.00008, // 1 NEAR = 0.00008 WBTC
-      },
-      USDC: {
-        NEAR: 0.222,   // 1 USDC = 0.222 NEAR
-        USDT: 0.998,   // 1 USDC ≈ 1 USDT
-        DAI: 0.999,    // 1 USDC ≈ 1 DAI
-      },
-      USDT: {
-        NEAR: 0.223,
-        USDC: 1.002,
-        DAI: 1.001,
-      },
-    };
-
-    const fromRates = rates[fromToken.symbol];
-    if (fromRates && fromRates[toToken.symbol]) {
-      return fromRates[toToken.symbol];
+    try {
+      // Get real-time exchange rate from price service
+      const rate = await priceService.getExchangeRate(fromToken.symbol, toToken.symbol);
+      console.log(`💱 Live rate: 1 ${fromToken.symbol} = ${rate.toFixed(4)} ${toToken.symbol}`);
+      return rate;
+    } catch (error) {
+      console.error('Error fetching exchange rate, using fallback:', error);
+      // Fallback to last known rates if API fails
+      return priceService.getExchangeRate(fromToken.symbol, toToken.symbol);
     }
-
-    // Default fallback
-    return 1.0;
   }
 
   /**
