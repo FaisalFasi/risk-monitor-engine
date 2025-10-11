@@ -1,31 +1,27 @@
 import type { NextConfig } from "next";
 
 const isGithubActions = process.env.GITHUB_ACTIONS === 'true';
-const isNetlify = process.env.NETLIFY === 'true';
 const isVercel = process.env.VERCEL === '1';
 
-// Base path configuration
-// Vercel and Netlify: No base path needed
-// GitHub Actions: Use /risk-monitor-engine
-const basePath = isGithubActions ? '/risk-monitor-engine' : '';
-const assetPrefix = isGithubActions ? '/risk-monitor-engine' : '';
+// Only use basePath/assetPrefix for GitHub Pages
+// Vercel, Netlify, and local dev don't need them
+const githubConfig = isGithubActions ? {
+  basePath: '/risk-monitor-engine',
+  assetPrefix: '/risk-monitor-engine',
+  trailingSlash: true,
+} : {};
 
 const nextConfig: NextConfig = {
   // Core settings
   reactStrictMode: true,
-  basePath: basePath,
-  assetPrefix: assetPrefix,
-  trailingSlash: !isVercel, // Vercel doesn't need trailing slashes
+  
+  // Conditionally apply GitHub Pages config (empty for Vercel)
+  ...githubConfig,
   
   // Image optimization
   images: {
     unoptimized: true,
     domains: [],
-  },
-  
-  // Environment variables
-  env: {
-    NEXT_PUBLIC_BASE_PATH: isGithubActions ? '/risk-monitor-engine' : '',
   },
   
   // Build optimizations
