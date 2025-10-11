@@ -25,6 +25,7 @@ export interface NearWalletActions {
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
   signMessage: (message: string) => Promise<string | null>;
+  executeTransaction: (transaction: any) => Promise<any>;
 }
 
 export function useNearWallet(): NearWalletState & NearWalletActions {
@@ -357,6 +358,35 @@ export function useNearWallet(): NearWalletState & NearWalletActions {
     }
   }, [account]);
 
+  const executeTransaction = useCallback(async (transaction: any): Promise<any> => {
+    const selector = selectorRef.current;
+    if (!selector) {
+      console.error('Wallet selector not initialized');
+      throw new Error('Wallet selector not initialized');
+    }
+
+    if (!account) {
+      console.error('No account connected');
+      throw new Error('Please connect your wallet first');
+    }
+
+    try {
+      console.log('Executing transaction:', transaction);
+      
+      const wallet = await selector.wallet();
+      
+      // Sign and send the transaction
+      const result = await wallet.signAndSendTransaction(transaction);
+      
+      console.log('Transaction result:', result);
+      return result;
+      
+    } catch (err) {
+      console.error('Error executing transaction:', err);
+      throw err;
+    }
+  }, [account]);
+
   return {
     account,
     isLoading,
@@ -369,5 +399,6 @@ export function useNearWallet(): NearWalletState & NearWalletActions {
     signIn,
     signOut,
     signMessage,
+    executeTransaction,
   };
 }

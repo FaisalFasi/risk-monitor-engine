@@ -1,315 +1,251 @@
+'use client';
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import React, { useState, useEffect } from 'react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { StatusBadge } from '@/components/ui/StatusBadge';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { useTransactionHistory } from '@/hooks/useTransactionHistory';
-import { TransactionEvent, TransactionHistoryFilter } from '@/services/transaction-history-service';
+import { Button } from '@/components/ui/Button';
+import { Transaction } from '@/types/tokens';
+import { NearTransactionHistory } from '@/services/near-transaction-history';
 
 interface TransactionHistoryProps {
-  user?: string;
-  className?: string;
+  accountId: string;
+  network?: 'testnet' | 'mainnet';
+  limit?: number;
 }
 
-export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
-  user,
-  className = ''
-}) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState<TransactionHistoryFilter>({});
-  const [showFilters, setShowFilters] = useState(false);
+export function TransactionHistory({ 
+  accountId, 
+  network = 'testnet',
+  limit = 25 
+}: TransactionHistoryProps) {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [offset, setOffset] = useState(0);
 
-  const {
-    transactions,
-    stats,
-    isLoading,
-    error,
-    hasMore,
-    loadMore,
-    refresh,
-    search,
-    setFilter: setFilterCallback,
-    exportHistory
-  } = useTransactionHistory(user, filter);
+  const transactionService = new NearTransactionHistory(network);
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    search(query);
+  useEffect(() => {
+    loadTransactions();
+  }, [accountId, network]);
+
+  const loadTransactions = async (loadMore = false) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const currentOffset = loadMore ? offset : 0;
+
+      const result = await transactionService.getTransactionHistory({
+        accountId,
+        limit,
+        offset: currentOffset,
+        network,
+      });
+
+      if (loadMore) {
+        setTransactions(prev => [...prev, ...result.transactions]);
+      } else {
+        setTransactions(result.transactions);
+      }
+
+      setHasMore(result.hasMore);
+      setOffset(currentOffset + limit);
+
+    } catch (err) {
+      console.error('Error loading transactions:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load transactions');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleFilterChange = (newFilter: TransactionHistoryFilter) => {
-    setFilter(newFilter);
-    setFilterCallback(newFilter);
+  const handleLoadMore = () => {
+    loadTransactions(true);
   };
 
-  const getTransactionIcon = (type: string) => {
+  const handleRefresh = () => {
+    setOffset(0);
+    loadTransactions(false);
+  };
+
+  const getTypeColor = (type: Transaction['type']) => {
     switch (type) {
-      case 'deposit': return '📥';
-      case 'withdraw': return '📤';
-      case 'allocate': return '🔄';
-      case 'deallocate': return '↩️';
-      case 'yield_claim': return '💰';
-      case 'fee_payment': return '💳';
-      default: return '📊';
+      case 'swap':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
+      case 'transfer':
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+      case 'stake':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400';
+      case 'contract_call':
+        return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusColor = (status: Transaction['status']) => {
     switch (status) {
-      case 'success': return <StatusBadge status="success" text="Success" />;
-      case 'pending': return <StatusBadge status="pending" text="Pending" />;
-      case 'failed': return <StatusBadge status="error" text="Failed" />;
-      default: return <StatusBadge status="info" text="Unknown" />;
+      case 'success':
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+      case 'failed':
+        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
     }
   };
 
-  const formatTimestamp = (timestamp: number) => {
+  const formatTime = (timestamp: number) => {
     const date = new Date(timestamp);
     const now = Date.now();
     const diff = now - timestamp;
 
-    if (diff < 60000) { // Less than 1 minute
+    // Less than 1 minute
+    if (diff < 60000) {
       return 'Just now';
-    } else if (diff < 3600000) { // Less than 1 hour
-      return `${Math.floor(diff / 60000)}m ago`;
-    } else if (diff < 86400000) { // Less than 1 day
-      return `${Math.floor(diff / 3600000)}h ago`;
-    } else {
-      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
     }
+    
+    // Less than 1 hour
+    if (diff < 3600000) {
+      const mins = Math.floor(diff / 60000);
+      return `${mins} ${mins === 1 ? 'min' : 'mins'} ago`;
+    }
+    
+    // Less than 1 day
+    if (diff < 86400000) {
+      const hours = Math.floor(diff / 3600000);
+      return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+    }
+    
+    // More than 1 day
+    return date.toLocaleDateString();
   };
 
-  const formatAmount = (amount: string, token: string) => {
-    const num = parseFloat(amount);
-    return `${num.toLocaleString()} ${token}`;
-  };
-
-  const handleExport = () => {
-    const csvData = exportHistory('csv');
-    const blob = new Blob([csvData], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `transaction-history-${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+  const truncateAddress = (address: string | undefined | null, chars = 8) => {
+    if (!address) return 'N/A';
+    if (address.length <= chars * 2) return address;
+    return `${address.slice(0, chars)}...${address.slice(-chars)}`;
   };
 
   return (
-    <Card className={`w-full ${className}`}>
+    <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2">
-              📋 Transaction History
-              {isLoading && <LoadingSpinner size="sm" />}
-            </CardTitle>
+            <CardTitle>Transaction History</CardTitle>
             <CardDescription>
-              {user ? `Transactions for ${user}` : 'All transactions'}
-              {stats.totalTransactions > 0 && (
-                <span className="ml-2">
-                  • {stats.totalTransactions} total • ${stats.totalVolume.toLocaleString()} volume
-                </span>
-              )}
+              Recent transactions for {truncateAddress(accountId, 12)}
             </CardDescription>
           </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => setShowFilters(!showFilters)}
-              variant="outline"
-              size="sm"
-            >
-              🔍 Filters
-            </Button>
-            <Button
-              onClick={handleExport}
-              variant="outline"
-              size="sm"
-            >
-              📤 Export
-            </Button>
-            <Button
-              onClick={refresh}
-              variant="outline"
-              size="sm"
-              disabled={isLoading}
-            >
-              ↻ Refresh
-            </Button>
-          </div>
-        </div>
-
-        {/* Search and Filters */}
-        <div className="space-y-4">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search by hash, user, token, or opportunity..."
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          {showFilters && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <select
-                value={filter.type || ''}
-                onChange={(e) => handleFilterChange({ ...filter, type: e.target.value || undefined })}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"
-              >
-                <option value="">All Types</option>
-                <option value="deposit">Deposit</option>
-                <option value="withdraw">Withdraw</option>
-                <option value="allocate">Allocate</option>
-                <option value="deallocate">Deallocate</option>
-                <option value="yield_claim">Yield Claim</option>
-                <option value="fee_payment">Fee Payment</option>
-              </select>
-
-              <select
-                value={filter.token || ''}
-                onChange={(e) => handleFilterChange({ ...filter, token: e.target.value || undefined })}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"
-              >
-                <option value="">All Tokens</option>
-                <option value="NEAR">NEAR</option>
-                <option value="USDC">USDC</option>
-                <option value="USDT">USDT</option>
-              </select>
-
-              <select
-                value={filter.status || ''}
-                onChange={(e) => handleFilterChange({ ...filter, status: e.target.value || undefined })}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"
-              >
-                <option value="">All Status</option>
-                <option value="success">Success</option>
-                <option value="pending">Pending</option>
-                <option value="failed">Failed</option>
-              </select>
-
-              <Button
-                onClick={() => handleFilterChange({})}
-                variant="outline"
-                size="sm"
-                className="w-full"
-              >
-                Clear Filters
-              </Button>
-            </div>
-          )}
+          <Button 
+            onClick={handleRefresh} 
+            disabled={loading}
+            variant="outline"
+            size="sm"
+          >
+            {loading ? '🔄' : '↻'} Refresh
+          </Button>
         </div>
       </CardHeader>
-
       <CardContent>
         {error && (
-          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <p className="text-red-700 dark:text-red-300">❌ {error}</p>
+          <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg mb-4">
+            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
           </div>
         )}
 
-        {transactions.length > 0 ? (
+        {loading && transactions.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Loading transactions...</p>
+          </div>
+        ) : transactions.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="text-4xl mb-4">📭</div>
+            <p className="text-slate-500 dark:text-slate-400">No transactions found</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
+              Make a swap or transfer to see your history here
+            </p>
+          </div>
+        ) : (
           <div className="space-y-3">
-            {transactions.map((transaction) => (
+            {transactions.map((tx, index) => (
               <div
-                key={transaction.id}
-                className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                key={`${tx.hash}-${index}`}
+                className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center space-x-2">
+                    <Badge className={`text-xs ${getTypeColor(tx.type || 'transfer')}`}>
+                      {(tx.type || 'transfer').replace('_', ' ').toUpperCase()}
+                    </Badge>
+                    <Badge className={`text-xs ${getStatusColor(tx.status || 'pending')}`}>
+                      {(tx.status || 'pending').toUpperCase()}
+                    </Badge>
+                  </div>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    {tx.timestamp ? formatTime(tx.timestamp) : 'N/A'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-2">
+                  <div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">From</p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                      {truncateAddress(tx.from)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">To</p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                      {truncateAddress(tx.to)}
+                    </p>
+                  </div>
+                </div>
+
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{getTransactionIcon(transaction.type)}</span>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium capitalize">{transaction.type}</span>
-                        {getStatusBadge(transaction.status)}
-                        {transaction.opportunity && (
-                          <Badge variant="outline">{transaction.opportunity}</Badge>
-                        )}
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {transaction.user} • {formatAmount(transaction.amount, transaction.token)}
-                        {transaction.apy && ` • ${transaction.apy}% APY`}
-                      </div>
-                    </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                      {tx.value || '0 NEAR'}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Fee: {tx.fee || '0 NEAR'}
+                    </p>
                   </div>
-                  
-                  <div className="text-right">
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {formatTimestamp(transaction.timestamp)}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-500 font-mono">
-                      {transaction.txHash.slice(0, 8)}...
-                    </div>
-                    {transaction.gasUsed && (
-                      <div className="text-xs text-gray-500 dark:text-gray-500">
-                        Gas: {transaction.gasUsed}
-                      </div>
-                    )}
-                  </div>
+                  {tx.explorerUrl && (
+                    <a
+                      href={tx.explorerUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center space-x-1"
+                    >
+                      <span>View</span>
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                  )}
                 </div>
               </div>
             ))}
 
             {hasMore && (
-              <div className="text-center pt-4">
-                <Button
-                  onClick={loadMore}
-                  disabled={isLoading}
+              <div className="flex justify-center pt-4">
+                <Button 
+                  onClick={handleLoadMore} 
+                  disabled={loading}
                   variant="outline"
                 >
-                  {isLoading ? 'Loading...' : 'Load More'}
+                  {loading ? 'Loading...' : 'Load More'}
                 </Button>
               </div>
             )}
-          </div>
-        ) : (
-          <EmptyState
-            icon="📋"
-            title="No Transactions Found"
-            description="Transaction history will appear here once you start making transactions."
-            actionText="Refresh"
-            onAction={refresh}
-          />
-        )}
-
-        {/* Stats Summary */}
-        {stats.totalTransactions > 0 && (
-          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-              <div>
-                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                  {stats.totalTransactions}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Total</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                  {stats.successfulTransactions}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Successful</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                  ${stats.totalVolume.toLocaleString()}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Volume</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                  {stats.averageGasUsed.toFixed(0)}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Avg Gas</div>
-              </div>
-            </div>
           </div>
         )}
       </CardContent>
     </Card>
   );
-};
+}

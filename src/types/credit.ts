@@ -58,6 +58,7 @@ export interface LTVAdjustment {
 }
 
 export interface RiskMetrics {
+  healthFactor: number;
   ltv: {
     current: number;
     maximum: number;
@@ -68,6 +69,12 @@ export interface RiskMetrics {
     used: number;
     available: number;
     apr: number;
+  };
+  collateral: {
+    totalValue: number;
+    requiredValue: number;
+    excessCollateral: number;
+    collateralRatio: number;
   };
   assetManagement: {
     aum: number;
