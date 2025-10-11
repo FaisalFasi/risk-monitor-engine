@@ -27,9 +27,11 @@ export default function AgentsPage() {
       const response = await fetch('/api/agents');
       const data = await response.json();
       if (data.success && data.data) {
-        setAgents(data.data);
-        if (data.data.length > 0 && !selectedAgentId) {
-          setSelectedAgentId(data.data[0].id);
+        // Ensure data.data is an array
+        const agentsData = Array.isArray(data.data) ? data.data : [];
+        setAgents(agentsData);
+        if (agentsData.length > 0 && !selectedAgentId) {
+          setSelectedAgentId(agentsData[0].id);
         }
       } else {
         console.error('Failed to fetch agents:', data.error);
@@ -85,7 +87,9 @@ export default function AgentsPage() {
     return <div className="p-6">Loading...</div>;
   }
 
-  const selectedAgent = agents.find(agent => agent.id === selectedAgentId);
+  // Ensure agents is always an array before using array methods
+  const agentsArray = Array.isArray(agents) ? agents : [];
+  const selectedAgent = agentsArray.find(agent => agent.id === selectedAgentId);
   const currentMetrics = performanceMetrics[selectedAgentId];
 
   return (
@@ -109,7 +113,7 @@ export default function AgentsPage() {
                 onChange={(e) => setSelectedAgentId(e.target.value)}
                 className="w-full border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 rounded-md px-3 py-2"
               >
-                {agents.map((agent) => (
+                {agentsArray.map((agent) => (
                   <option key={agent.id} value={agent.id}>
                     {agent.name}
                   </option>
@@ -307,7 +311,7 @@ export default function AgentsPage() {
                         </tr>
                       </thead>
                       <tbody className="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-600">
-                        {agents.slice(0, 5).map((agent) => (
+                        {agentsArray.slice(0, 5).map((agent) => (
                           <tr key={agent.id} className={agent.id === selectedAgentId ? 'bg-blue-50 dark:bg-blue-900/20' : ''}>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
