@@ -42,20 +42,23 @@ export class NearSwapService {
     try {
       console.log(`Getting swap estimate: ${amountIn} ${fromToken.symbol} → ${toToken.symbol}`);
 
-      // For demo/testing purposes, we'll calculate a simple estimate
-      // In production, you'd call Ref Finance's get_return method
-      const amountInParsed = parseTokenAmount(amountIn, fromToken.decimals);
+      // Calculate estimate based on exchange rate
+      const amountInFloat = parseFloat(amountIn);
       
-      // Simulate exchange rate (in production, get this from Ref Finance)
+      // Get exchange rate (in production, get this from Ref Finance)
       const exchangeRate = await this.getExchangeRate(fromToken, toToken);
-      const amountOutRaw = BigInt(amountInParsed) * BigInt(Math.floor(exchangeRate * 1000)) / BigInt(1000);
       
-      // Apply slippage
-      const slippageMultiplier = BigInt(Math.floor((100 - slippage) * 100));
-      const amountOutWithSlippage = amountOutRaw * slippageMultiplier / BigInt(10000);
+      // Calculate output amount in token units (not yocto)
+      const amountOutFloat = amountInFloat * exchangeRate;
       
-      const amountOut = formatTokenAmount(amountOutWithSlippage.toString(), toToken.decimals);
-      const minimumReceived = formatTokenAmount(amountOutWithSlippage.toString(), toToken.decimals);
+      // Apply slippage (0.5% default)
+      const slippageFactor = (100 - slippage) / 100;
+      const amountOutWithSlippage = amountOutFloat * slippageFactor;
+      
+      // Format to reasonable decimals based on token
+      const decimalsToShow = toToken.decimals === 24 ? 4 : toToken.decimals === 18 ? 6 : 2;
+      const amountOut = amountOutWithSlippage.toFixed(decimalsToShow);
+      const minimumReceived = amountOutWithSlippage.toFixed(decimalsToShow);
 
       // Calculate price impact (simplified)
       const priceImpact = 0.1; // 0.1% (in production, calculate based on liquidity)

@@ -52,11 +52,20 @@ const NearIntentsDashboardV2 = () => {
         accountId: account.accountId,
       });
 
+      console.log('📊 Quote received:', {
+        amountIn: amount,
+        amountOut: estimate.quote.amountOut,
+        exchangeRate: estimate.exchangeRate,
+        priceImpact: estimate.priceImpact,
+      });
+
       setEstimatedOutput(estimate.quote.amountOut);
       setExchangeRate(estimate.exchangeRate);
       setPriceImpact(estimate.priceImpact);
     } catch (err) {
       console.error('Error getting quote:', err);
+      setEstimatedOutput('0');
+      setExchangeRate('0');
     } finally {
       setIsLoadingQuote(false);
     }
@@ -295,13 +304,22 @@ const NearIntentsDashboardV2 = () => {
                     To (estimated)
                   </label>
                   <div className="flex items-center space-x-3">
-                    <input
-                      type="text"
-                      value={isLoadingQuote ? '...' : estimatedOutput}
-                      disabled
-                      placeholder="0.0"
-                      className="flex-1 text-2xl font-medium bg-transparent border-none outline-none text-slate-900 dark:text-slate-100 placeholder:text-slate-400 disabled:opacity-70"
-                    />
+                    <div className="flex-1">
+                      <div className="text-2xl font-medium text-slate-900 dark:text-slate-100">
+                        {isLoadingQuote ? (
+                          <span className="text-slate-400">Calculating...</span>
+                        ) : estimatedOutput && estimatedOutput !== '0' ? (
+                          <span>~{estimatedOutput}</span>
+                        ) : (
+                          <span className="text-slate-400">0.0</span>
+                        )}
+                      </div>
+                      {estimatedOutput && estimatedOutput !== '0' && !isLoadingQuote && (
+                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                          Rate: 1 {fromToken.symbol} = {exchangeRate} {toToken.symbol}
+                        </div>
+                      )}
+                    </div>
                     <TokenSelector
                       selectedToken={toToken}
                       onSelectToken={setToToken}
@@ -313,8 +331,14 @@ const NearIntentsDashboardV2 = () => {
               </div>
 
               {/* Swap Details */}
-              {estimatedOutput !== '0.00' && !isLoadingQuote && (
+              {amount && parseFloat(amount) > 0 && !isLoadingQuote && estimatedOutput !== '0' && (
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-600 dark:text-slate-400">You'll receive (estimated)</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100 text-lg">
+                      ~{estimatedOutput} {toToken.symbol}
+                    </span>
+                  </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-600 dark:text-slate-400">Exchange Rate</span>
                     <span className="font-medium text-slate-900 dark:text-slate-100">
@@ -328,9 +352,9 @@ const NearIntentsDashboardV2 = () => {
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-600 dark:text-slate-400">Fee</span>
+                    <span className="text-slate-600 dark:text-slate-400">Network Fee (estimated)</span>
                     <span className="font-medium text-slate-900 dark:text-slate-100">
-                      0.3%
+                      ~0.001 NEAR
                     </span>
                   </div>
                 </div>
@@ -404,22 +428,34 @@ const NearIntentsDashboardV2 = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4 text-sm text-slate-600 dark:text-slate-400">
+            <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border-l-4 border-yellow-500">
+              <div className="font-medium text-yellow-800 dark:text-yellow-400 mb-1">
+                ℹ️ Exchange Rates
+              </div>
+              <div className="text-xs text-yellow-700 dark:text-yellow-300">
+                Exchange rates shown are <strong>real market rates</strong> (e.g., 1 NEAR ≈ $4.50 worth of USDC).
+                This is different from the legacy view which just applies a 3% fee.
+                <br/><br/>
+                <strong>Note:</strong> Currently using demo rates. In production, rates would be fetched from Ref Finance pools in real-time.
+              </div>
+            </div>
+            
             <p>
               Token swaps are executed through <strong>Ref Finance</strong>, NEAR's leading decentralized exchange (DEX).
               All transactions are executed on-chain and can be verified on NEAR Explorer.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <div className="text-blue-600 dark:text-blue-400 font-medium mb-1">✅ No Custody</div>
-                <div className="text-xs">Your tokens never leave your wallet</div>
+                <div className="text-blue-600 dark:text-blue-400 font-medium mb-1">✅ Real Blockchain</div>
+                <div className="text-xs">Transactions execute on NEAR network</div>
               </div>
               <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
                 <div className="text-green-600 dark:text-green-400 font-medium mb-1">⚡ Fast Execution</div>
-                <div className="text-xs">Swaps complete in seconds</div>
+                <div className="text-xs">Swaps complete in ~2 seconds</div>
               </div>
               <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                <div className="text-purple-600 dark:text-purple-400 font-medium mb-1">🔍 Transparent</div>
-                <div className="text-xs">All transactions on-chain</div>
+                <div className="text-purple-600 dark:text-purple-400 font-medium mb-1">🔍 Verifiable</div>
+                <div className="text-xs">View on NearBlocks explorer</div>
               </div>
             </div>
           </div>
