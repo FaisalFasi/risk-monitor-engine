@@ -124,7 +124,8 @@ export function TransactionHistory({
     return date.toLocaleDateString();
   };
 
-  const truncateAddress = (address: string, chars = 8) => {
+  const truncateAddress = (address: string | undefined | null, chars = 8) => {
+    if (!address) return 'N/A';
     if (address.length <= chars * 2) return address;
     return `${address.slice(0, chars)}...${address.slice(-chars)}`;
   };
@@ -178,15 +179,15 @@ export function TransactionHistory({
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center space-x-2">
-                    <Badge className={`text-xs ${getTypeColor(tx.type)}`}>
-                      {tx.type.replace('_', ' ').toUpperCase()}
+                    <Badge className={`text-xs ${getTypeColor(tx.type || 'transfer')}`}>
+                      {(tx.type || 'transfer').replace('_', ' ').toUpperCase()}
                     </Badge>
-                    <Badge className={`text-xs ${getStatusColor(tx.status)}`}>
-                      {tx.status.toUpperCase()}
+                    <Badge className={`text-xs ${getStatusColor(tx.status || 'pending')}`}>
+                      {(tx.status || 'pending').toUpperCase()}
                     </Badge>
                   </div>
                   <span className="text-xs text-slate-500 dark:text-slate-400">
-                    {formatTime(tx.timestamp)}
+                    {tx.timestamp ? formatTime(tx.timestamp) : 'N/A'}
                   </span>
                 </div>
 
@@ -208,23 +209,25 @@ export function TransactionHistory({
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                      {tx.value}
+                      {tx.value || '0 NEAR'}
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Fee: {tx.fee}
+                      Fee: {tx.fee || '0 NEAR'}
                     </p>
                   </div>
-                  <a
-                    href={tx.explorerUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center space-x-1"
-                  >
-                    <span>View</span>
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </a>
+                  {tx.explorerUrl && (
+                    <a
+                      href={tx.explorerUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center space-x-1"
+                    >
+                      <span>View</span>
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                  )}
                 </div>
               </div>
             ))}
