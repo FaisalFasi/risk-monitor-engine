@@ -1,18 +1,54 @@
-import { staticResponses } from '@/app/_utils/static-export';
+import { NextResponse } from 'next/server';
+import { store } from '@/lib/store';
+import { ensureSeeded } from '@/lib/seed';
 
-export const dynamic = 'force-static';
-export const revalidate = 3600; // 1 hour
-
-// Mock data for static export
-const mockData = {
-  message: 'This is a static API response',
-  timestamp: new Date().toISOString(),
-};
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  return staticResponses.mockData(mockData);
+  try {
+    // Ensure data is seeded
+    ensureSeeded();
+    
+    // Get all agents from store
+    const agents = store.getAgents();
+    
+    return NextResponse.json({
+      success: true,
+      data: agents,
+      count: agents.length
+    });
+  } catch (error) {
+    console.error('Error fetching agents:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to fetch agents',
+        data: []
+      },
+      { status: 500 }
+    );
+  }
 }
 
-export async function POST() {
-  return staticResponses.notAllowed();
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    
+    // Add agent to store
+    store.addAgent(body);
+    
+    return NextResponse.json({
+      success: true,
+      data: body
+    });
+  } catch (error) {
+    console.error('Error adding agent:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to add agent'
+      },
+      { status: 500 }
+    );
+  }
 }
