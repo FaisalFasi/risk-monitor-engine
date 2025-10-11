@@ -36,9 +36,20 @@ const NETWORK_CONFIG = {
 // Choose network: 'testnet' for development, 'mainnet' for production
 const CURRENT_NETWORK = (process.env.NEXT_PUBLIC_NEAR_NETWORK_ID as 'testnet' | 'mainnet') || 'testnet';
 
+// Helper function to get the appropriate node URL
+function getNodeUrl(): string {
+  // If running in development, use the proxy to avoid CORS issues
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return '/api/near-rpc-proxy';
+  }
+  
+  // In production or if NEXT_PUBLIC_NEAR_NODE_URL is set, use the direct URL
+  return process.env.NEXT_PUBLIC_NEAR_NODE_URL || NETWORK_CONFIG[CURRENT_NETWORK].nodeUrl;
+}
+
 export const defaultConfig: WalletSelectorConfig = {
   networkId: NETWORK_CONFIG[CURRENT_NETWORK].networkId,
-  nodeUrl: process.env.NEXT_PUBLIC_NEAR_NODE_URL || NETWORK_CONFIG[CURRENT_NETWORK].nodeUrl,
+  nodeUrl: getNodeUrl(),
   walletUrl: process.env.NEXT_PUBLIC_NEAR_WALLET_URL || NETWORK_CONFIG[CURRENT_NETWORK].walletUrl,
   helperUrl: NETWORK_CONFIG[CURRENT_NETWORK].helperUrl,
   explorerUrl: NETWORK_CONFIG[CURRENT_NETWORK].explorerUrl,
