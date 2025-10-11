@@ -22,13 +22,18 @@ export default function CreditVaultsPage() {
       const response = await fetch('/api/agents');
       const data = await response.json();
       if (data.success && data.data) {
-        setAgents(data.data);
-        if (data.data.length > 0 && !selectedAgentId) {
-          setSelectedAgentId(data.data[0].id);
+        // Ensure data.data is an array
+        const agentsData = Array.isArray(data.data) ? data.data : [];
+        setAgents(agentsData);
+        if (agentsData.length > 0 && !selectedAgentId) {
+          setSelectedAgentId(agentsData[0].id);
         }
+      } else {
+        setAgents([]);
       }
     } catch (error) {
       console.error('Error fetching agents:', error);
+      setAgents([]);
     }
   }, [selectedAgentId]);
 
@@ -37,10 +42,15 @@ export default function CreditVaultsPage() {
       const response = await fetch('/api/credit');
       const data = await response.json();
       if (data.success && data.data) {
-        setVaults(data.data);
+        // Ensure data.data is an array
+        const vaultsData = Array.isArray(data.data) ? data.data : [];
+        setVaults(vaultsData);
+      } else {
+        setVaults([]);
       }
     } catch (error) {
       console.error('Error fetching vaults:', error);
+      setVaults([]);
     }
   }, []);
 
@@ -55,11 +65,15 @@ export default function CreditVaultsPage() {
     setShowCreateVault(false);
   };
 
+  // Ensure vaults is always an array before using array methods
+  const vaultsArray = Array.isArray(vaults) ? vaults : [];
+  const agentsArray = Array.isArray(agents) ? agents : [];
+
   // Filter and sort vaults
-  const filteredVaults = vaults.filter(vault => {
+  const filteredVaults = vaultsArray.filter(vault => {
     const matchesSearch = searchQuery === '' || 
       vault.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      agents.find(a => a.id === vault.agentId)?.name.toLowerCase().includes(searchQuery.toLowerCase());
+      agentsArray.find(a => a.id === vault.agentId)?.name.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesStatus = statusFilter === 'all' || vault.status === statusFilter;
     
@@ -171,7 +185,7 @@ export default function CreditVaultsPage() {
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Exposure</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  ${vaults.reduce((sum, v) => sum + v.creditLimit, 0).toLocaleString()}
+                  ${vaultsArray.reduce((sum, v) => sum + v.creditLimit, 0).toLocaleString()}
                 </p>
               </div>
               <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
@@ -187,7 +201,7 @@ export default function CreditVaultsPage() {
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Vaults</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {vaults.filter(v => v.status === VaultStatus.ACTIVE).length}
+                  {vaultsArray.filter(v => v.status === VaultStatus.ACTIVE).length}
                 </p>
               </div>
               <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
@@ -203,7 +217,7 @@ export default function CreditVaultsPage() {
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Avg Health Factor</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {vaults.length > 0 ? (vaults.reduce((sum, v) => sum + v.riskMetrics.healthFactor, 0) / vaults.length).toFixed(2) : '0.00'}
+                  {vaultsArray.length > 0 ? (vaultsArray.reduce((sum, v) => sum + v.riskMetrics.healthFactor, 0) / vaultsArray.length).toFixed(2) : '0.00'}
                 </p>
               </div>
               <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
@@ -219,7 +233,7 @@ export default function CreditVaultsPage() {
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">High Risk Vaults</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {vaults.filter(v => v.riskMetrics.healthFactor < 1.3).length}
+                  {vaultsArray.filter(v => v.riskMetrics.healthFactor < 1.3).length}
                 </p>
               </div>
               <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center">
@@ -359,7 +373,7 @@ export default function CreditVaultsPage() {
                               </span>
                             </div>
                             <p className="text-gray-600 dark:text-gray-400">
-                              Agent: <span className="font-medium">{agents.find(a => a.id === vault.agentId)?.name || 'Unknown'}</span>
+                              Agent: <span className="font-medium">{agentsArray.find(a => a.id === vault.agentId)?.name || 'Unknown'}</span>
                             </p>
                             <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                               Created: {new Date(vault.createdAt).toLocaleDateString()}
@@ -461,28 +475,28 @@ export default function CreditVaultsPage() {
                 <div className="flex justify-between items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                   <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">Total Exposure</span>
                   <span className="font-bold text-blue-600 dark:text-blue-400">
-                    ${vaults.reduce((sum, v) => sum + v.creditLimit, 0).toLocaleString()}
+                    ${vaultsArray.reduce((sum, v) => sum + v.creditLimit, 0).toLocaleString()}
                   </span>
                 </div>
                 
                 <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
                   <span className="text-sm text-green-600 dark:text-green-400 font-medium">Active Vaults</span>
                   <span className="font-bold text-green-600 dark:text-green-400">
-                    {vaults.filter(v => v.status === VaultStatus.ACTIVE).length}
+                    {vaultsArray.filter(v => v.status === VaultStatus.ACTIVE).length}
                   </span>
                 </div>
                 
                 <div className="flex justify-between items-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
                   <span className="text-sm text-purple-600 dark:text-purple-400 font-medium">Avg Health Factor</span>
                   <span className="font-bold text-purple-600 dark:text-purple-400">
-                    {vaults.length > 0 ? (vaults.reduce((sum, v) => sum + v.riskMetrics.healthFactor, 0) / vaults.length).toFixed(2) : '0.00'}
+                    {vaultsArray.length > 0 ? (vaultsArray.reduce((sum, v) => sum + v.riskMetrics.healthFactor, 0) / vaultsArray.length).toFixed(2) : '0.00'}
                   </span>
                 </div>
                 
                 <div className="flex justify-between items-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
                   <span className="text-sm text-red-600 dark:text-red-400 font-medium">High Risk Vaults</span>
                   <span className="font-bold text-red-600 dark:text-red-400">
-                    {vaults.filter(v => v.riskMetrics.healthFactor < 1.3).length}
+                    {vaultsArray.filter(v => v.riskMetrics.healthFactor < 1.3).length}
                   </span>
                 </div>
               </div>
@@ -494,7 +508,7 @@ export default function CreditVaultsPage() {
       {/* Vault Creation Modal */}
       {showCreateVault && (
         <CreditVaultManager
-          agents={agents}
+          agents={agentsArray}
           onVaultCreated={handleVaultCreated}
           onClose={() => setShowCreateVault(false)}
         />
