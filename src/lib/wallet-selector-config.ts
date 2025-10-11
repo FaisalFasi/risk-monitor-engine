@@ -16,17 +16,19 @@ export interface WalletSelectorConfig {
 }
 
 // Network configuration - change this to switch between testnet and mainnet
+// Using alternative RPC endpoints with better rate limits
 const NETWORK_CONFIG = {
   testnet: {
     networkId: 'testnet' as const,
-    nodeUrl: 'https://rpc.testnet.near.org',
+    // Using public.rpc.fastnear.com - better rate limits than official endpoint
+    nodeUrl: 'https://test.rpc.fastnear.com',
     walletUrl: 'https://testnet.mynearwallet.com',
     helperUrl: 'https://helper.testnet.near.org',
     explorerUrl: 'https://testnet.nearblocks.io',
   },
   mainnet: {
     networkId: 'mainnet' as const,
-    nodeUrl: 'https://rpc.mainnet.near.org',
+    nodeUrl: 'https://free.rpc.fastnear.com',
     walletUrl: 'https://wallet.near.org',
     helperUrl: 'https://helper.mainnet.near.org',
     explorerUrl: 'https://nearblocks.io',
@@ -38,33 +40,56 @@ const CURRENT_NETWORK = (process.env.NEXT_PUBLIC_NEAR_NETWORK_ID as 'testnet' | 
 
 // Helper function to get the appropriate node URL
 function getNodeUrl(): string {
-  // If running in development, use the proxy to avoid CORS issues
+  // If running in development (localhost), use the proxy to avoid CORS issues
   if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-    return '/api/near-rpc-proxy';
+    const proxyUrl = `${window.location.origin}/api/near-rpc-proxy`;
+    console.log('Using CORS proxy for NEAR RPC:', proxyUrl);
+    return proxyUrl;
   }
   
   // In production or if NEXT_PUBLIC_NEAR_NODE_URL is set, use the direct URL
   return process.env.NEXT_PUBLIC_NEAR_NODE_URL || NETWORK_CONFIG[CURRENT_NETWORK].nodeUrl;
 }
 
+// Function to get config dynamically (called at runtime, not module load time)
+export function getDefaultConfig(): WalletSelectorConfig {
+  return {
+    networkId: NETWORK_CONFIG[CURRENT_NETWORK].networkId,
+    nodeUrl: getNodeUrl(),
+    walletUrl: process.env.NEXT_PUBLIC_NEAR_WALLET_URL || NETWORK_CONFIG[CURRENT_NETWORK].walletUrl,
+    helperUrl: NETWORK_CONFIG[CURRENT_NETWORK].helperUrl,
+    explorerUrl: NETWORK_CONFIG[CURRENT_NETWORK].explorerUrl,
+  };
+}
+
+// Legacy export for backwards compatibility
 export const defaultConfig: WalletSelectorConfig = {
   networkId: NETWORK_CONFIG[CURRENT_NETWORK].networkId,
-  nodeUrl: getNodeUrl(),
-  walletUrl: process.env.NEXT_PUBLIC_NEAR_WALLET_URL || NETWORK_CONFIG[CURRENT_NETWORK].walletUrl,
+  nodeUrl: 'https://rpc.testnet.near.org', // Placeholder, will be overridden
+  walletUrl: NETWORK_CONFIG[CURRENT_NETWORK].walletUrl,
   helperUrl: NETWORK_CONFIG[CURRENT_NETWORK].helperUrl,
   explorerUrl: NETWORK_CONFIG[CURRENT_NETWORK].explorerUrl,
 };
 
-export async function createWalletSelector(config: WalletSelectorConfig = defaultConfig) {
+export async function createWalletSelector(config?: WalletSelectorConfig) {
   try {
-    console.log('Creating wallet selector with config:', config);
+    // Always use dynamic config if none provided
+    const finalConfig = config || getDefaultConfig();
+    
+    console.log('Creating wallet selector with config:', finalConfig);
     
     const selector = await setupWalletSelector({
-      network: config.networkId,
+      network: {
+        networkId: finalConfig.networkId,
+        nodeUrl: finalConfig.nodeUrl,
+        walletUrl: finalConfig.walletUrl,
+        helperUrl: finalConfig.helperUrl,
+        explorerUrl: finalConfig.explorerUrl,
+      },
       debug: process.env.NODE_ENV === 'development',
       modules: [
         setupMyNearWallet({
-          walletUrl: config.walletUrl,
+          walletUrl: finalConfig.walletUrl,
         }),
         // Temporarily disable Sender and Ledger to avoid compatibility issues
         // setupSender(),
@@ -72,7 +97,7 @@ export async function createWalletSelector(config: WalletSelectorConfig = defaul
       ],
     });
 
-    console.log('Wallet selector created successfully');
+    console.log('Wallet selector created successfully with nodeUrl:', finalConfig.nodeUrl);
     return selector;
   } catch (error) {
     console.error('Error creating wallet selector:', error);
