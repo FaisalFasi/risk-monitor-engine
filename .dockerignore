@@ -1,0 +1,92 @@
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Next.js build output
+.next
+out
+dist
+
+# Testing
+coverage
+.nyc_output
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local env files
+.env*.local
+.env
+.env.development
+.env.production
+
+# Vercel
+.vercel
+
+# Typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# Git
+.git
+.gitignore
+.github
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Documentation
+*.md
+!README.md
+
+# Netlify
+.netlify
+
+# Cache
+.cache
+.qoder
+
+# Logs
+*.log
+logs
+
+# OS
+Thumbs.db
+
+# Contract builds
+contracts/**/target
+contracts/**/.cargo
+contracts/**/Cargo.lock
+
+# Test files
+*.test.ts
+*.test.js
+*.test.tsx
+*.spec.ts
+*.spec.js
+__tests__
+tests
+
+# Scripts that aren't needed in production
+scripts
+deploy-*.sh
+execute-*.ts
+execute-*.ps1
+execute-*.bat
+test-*.ts
+test-*.js
+verify-*.ts
+

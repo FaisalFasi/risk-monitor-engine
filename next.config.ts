@@ -1,11 +1,14 @@
 import type { NextConfig } from "next";
 
 /** 
- * Minimal Next.js Configuration for Vercel & Netlify
- * No basePath or assetPrefix - works perfectly on both platforms
+ * Minimal Next.js Configuration for Vercel, Netlify & Render
+ * No basePath or assetPrefix - works perfectly on all platforms
  */
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  
+  // Output mode for Docker/Render deployments
+  output: 'standalone',
   
   // Image optimization - let platform handle it
   images: {

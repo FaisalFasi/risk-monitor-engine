@@ -1,0 +1,47 @@
+# Render.com Configuration for Next.js App
+# This file defines the deployment configuration for Render
+
+services:
+  # Web service for the Next.js application
+  - type: web
+    name: risk-monitor-engine
+    runtime: docker
+    plan: free # Change to 'starter' or higher for production
+    region: oregon # Choose your preferred region
+    
+    # Build configuration
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    
+    # Environment variables
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "20"
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      - key: PORT
+        value: "3000"
+      
+      # NEAR Network Configuration (optional - add your values)
+      # - key: NEXT_PUBLIC_NEAR_NETWORK_ID
+      #   value: testnet
+      # - key: NEAR_NODE_URL
+      #   sync: false # Set to true to sync from Render dashboard
+    
+    # Health check
+    healthCheckPath: /
+    
+    # Auto-deploy settings
+    autoDeploy: true
+    
+    # Scaling (for paid plans)
+    numInstances: 1
+    
+    # Build command (Docker handles this)
+    # buildCommand: npm run build
+    
+    # Start command (Docker handles this)
+    # startCommand: npm start
+
