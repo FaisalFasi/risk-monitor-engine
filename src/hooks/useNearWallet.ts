@@ -54,13 +54,13 @@ export function useNearWallet(): NearWalletState & NearWalletActions {
       
       // Create wallet selector
       const walletSelector = await createWalletSelector();
-      console.log('Wallet selector created:', walletSelector);
+      console.log('Wallet selector created with network:', walletSelector.options?.network);
       selectorRef.current = walletSelector;
       setSelector(walletSelector);
       
       // Create modal
       const walletModal = await createWalletSelectorModal(walletSelector);
-      console.log('Wallet modal created:', walletModal);
+      console.log('Wallet modal created');
       modalRef.current = walletModal;
       setModal(walletModal);
       
@@ -72,7 +72,15 @@ export function useNearWallet(): NearWalletState & NearWalletActions {
       }
       
       // Listen for account changes
-      walletSelector.on('accountsChanged', handleAccountChange);
+      const subscription = walletSelector.store.observable
+        .subscribe((state: any) => {
+          const accounts = state.accounts;
+          if (accounts.length > 0) {
+            handleAccountChange(accounts[0]);
+          } else {
+            handleAccountChange(null);
+          }
+        });
       
       console.log('Wallet selector initialized successfully');
       
@@ -125,10 +133,18 @@ export function useNearWallet(): NearWalletState & NearWalletActions {
   const getAccountBalance = async (accountId: string): Promise<string> => {
     try {
       const selector = selectorRef.current;
-      if (!selector) return '0';
+      if (!selector) {
+        console.log('Selector not available for balance fetch');
+        return '0';
+      }
       
-      const { network } = selector.options;
-      const response = await fetch(`${network.nodeUrl}`, {
+      // Get the node URL from selector options
+      const network = selector.options?.network;
+      const nodeUrl = network?.nodeUrl || 'https://rpc.testnet.near.org';
+      
+      console.log('Fetching balance from:', nodeUrl);
+      
+      const response = await fetch(nodeUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -145,6 +161,10 @@ export function useNearWallet(): NearWalletState & NearWalletActions {
         }),
       });
       
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       const balance = data.result?.amount || '0';
       return (parseFloat(balance) / 1e24).toFixed(4);
@@ -157,9 +177,16 @@ export function useNearWallet(): NearWalletState & NearWalletActions {
   const getAccountTokens = async (accountId: string): Promise<Array<{token: string, balance: string, contract: string}>> => {
     try {
       const selector = selectorRef.current;
-      if (!selector) return [];
+      if (!selector) {
+        console.log('Selector not available for token fetch');
+        return [];
+      }
       
-      const { network } = selector.options;
+      // Get the node URL from selector options
+      const network = selector.options?.network;
+      const nodeUrl = network?.nodeUrl || 'https://rpc.testnet.near.org';
+      
+      console.log('Fetching tokens from:', nodeUrl);
       
       // Common token contracts on NEAR
       const tokenContracts = [
@@ -173,7 +200,7 @@ export function useNearWallet(): NearWalletState & NearWalletActions {
       
       for (const tokenInfo of tokenContracts) {
         try {
-          const response = await fetch(`${network.nodeUrl}`, {
+          const response = await fetch(nodeUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -191,6 +218,11 @@ export function useNearWallet(): NearWalletState & NearWalletActions {
               },
             }),
           });
+          
+          if (!response.ok) {
+            console.log(`HTTP error for ${tokenInfo.token}! status: ${response.status}`);
+            continue;
+          }
           
           const data = await response.json();
           if (data.result?.result) {
@@ -270,22 +302,34 @@ export function useNearWallet(): NearWalletState & NearWalletActions {
 
   const signOut = useCallback(async () => {
     const selector = selectorRef.current;
-    if (!selector) return;
+    if (!selector) {
+      console.log('Selector not available for signOut');
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
     
     try {
+      console.log('Signing out from wallet...');
       const wallet = await selector.wallet();
       await wallet.signOut();
       
+      // Clear all state
       setAccount(null);
       setIsConnected(false);
       localStorage.removeItem('near-wallet-account');
+      
+      console.log('Signed out successfully');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to sign out';
       setError(errorMessage);
       console.error('Sign out error:', err);
+      
+      // Even if there's an error, clear local state
+      setAccount(null);
+      setIsConnected(false);
+      localStorage.removeItem('near-wallet-account');
     } finally {
       setIsLoading(false);
     }
