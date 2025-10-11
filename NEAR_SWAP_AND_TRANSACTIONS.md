@@ -141,30 +141,47 @@ Scroll down to see your transaction history automatically!
 
 ## 🔄 How Swaps Work
 
-### **Current Implementation (Demo Mode)**
+### **✅ REAL Blockchain Transactions (NOW LIVE!)**
 
-Right now, swaps are **simulated** for safety and testing. Here's what happens:
+Swaps now execute **real transactions** on the NEAR blockchain:
 
-1. ✅ Real quote calculation
+1. ✅ Real quote calculation from exchange rates
 2. ✅ Real balance checking
-3. ✅ Real UI interaction
-4. ⚠️ **Simulated transaction** (doesn't actually execute on blockchain yet)
-5. ✅ Transaction appears in history
+3. ✅ Real transaction preparation (Ref Finance format)
+4. ✅ **REAL wallet signing** - User approves in wallet popup
+5. ✅ **REAL blockchain execution** - Broadcasts to NEAR network
+6. ✅ **REAL transaction hash** - Viewable on NearBlocks explorer
+7. ✅ Transaction appears in ALL NEAR apps (wallet, explorers, etc.)
 
-### **To Enable Real Swaps**
+### **Transaction Flow:**
 
-To make swaps execute on the actual blockchain, you need to:
+```
+1. User clicks "Swap"
+   ↓
+2. App prepares transaction data
+   ↓
+3. Wallet popup opens (user sees details)
+   ↓
+4. User approves or rejects
+   ↓
+5. If approved: Transaction broadcasts to blockchain
+   ↓
+6. Blockchain confirms (~2 seconds)
+   ↓
+7. Real transaction hash returned
+   ↓
+8. Appears on NearBlocks, wallet, and transaction history
+```
 
-1. **Integrate with NEAR Wallet Selector's transaction signing**
-2. **Call Ref Finance contract** with prepared transaction
-3. **Wait for blockchain confirmation**
+### **What Makes It Real:**
 
-I kept it simulated for now so you can:
-- Test the UI safely
-- Not spend real tokens during development
-- Understand the flow before going live
+- 💰 **Real gas fees** (~0.001 NEAR per swap)
+- 🔐 **Wallet signature required** (secure)
+- ⛓️ **On-chain execution** (permanent)
+- 🔍 **Publicly verifiable** (anyone can see)
+- 📝 **Immutable record** (can't be deleted)
 
-**To enable real swaps, uncomment the actual transaction execution code in `near-swap.ts`.**
+See `REAL_TRANSACTIONS_GUIDE.md` for complete details on how it works!
 
 ## 📊 Transaction History
 
