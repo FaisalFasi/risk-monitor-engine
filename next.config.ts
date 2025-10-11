@@ -1,27 +1,15 @@
 import type { NextConfig } from "next";
 
-const isGithubActions = process.env.GITHUB_ACTIONS === 'true';
-const isVercel = process.env.VERCEL === '1';
-
-// Only use basePath/assetPrefix for GitHub Pages
-// Vercel, Netlify, and local dev don't need them
-const githubConfig = isGithubActions ? {
-  basePath: '/risk-monitor-engine',
-  assetPrefix: '/risk-monitor-engine',
-  trailingSlash: true,
-} : {};
-
+/** 
+ * Minimal Next.js Configuration for Vercel & Netlify
+ * No basePath or assetPrefix - works perfectly on both platforms
+ */
 const nextConfig: NextConfig = {
-  // Core settings
   reactStrictMode: true,
   
-  // Conditionally apply GitHub Pages config (empty for Vercel)
-  ...githubConfig,
-  
-  // Image optimization
+  // Image optimization - let platform handle it
   images: {
-    unoptimized: true,
-    domains: [],
+    unoptimized: false,
   },
   
   // Build optimizations
@@ -33,13 +21,7 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   
-  // Compiler options
-  compiler: {
-    // Don't remove console logs to help with debugging
-    removeConsole: false,
-  },
-  
-  // Webpack configuration
+  // Webpack configuration for NEAR libraries
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
@@ -52,7 +34,7 @@ const nextConfig: NextConfig = {
     return config;
   },
   
-  // Add headers for CORS support
+  // CORS headers for API routes
   async headers() {
     return [
       {
@@ -66,9 +48,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  
-  // Disable X-Powered-By header
-  poweredByHeader: false
 };
 
 export default nextConfig;
