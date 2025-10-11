@@ -2,17 +2,20 @@ import type { NextConfig } from "next";
 
 const isGithubActions = process.env.GITHUB_ACTIONS === 'true';
 const isNetlify = process.env.NETLIFY === 'true';
+const isVercel = process.env.VERCEL === '1';
 
-// For Netlify, we don't need basePath
-const basePath = isNetlify ? '' : (isGithubActions ? '/risk-monitor-engine' : '');
-const assetPrefix = isNetlify ? '' : (isGithubActions ? '/risk-monitor-engine' : '');
+// Base path configuration
+// Vercel and Netlify: No base path needed
+// GitHub Actions: Use /risk-monitor-engine
+const basePath = isGithubActions ? '/risk-monitor-engine' : '';
+const assetPrefix = isGithubActions ? '/risk-monitor-engine' : '';
 
 const nextConfig: NextConfig = {
   // Core settings
   reactStrictMode: true,
   basePath: basePath,
   assetPrefix: assetPrefix,
-  trailingSlash: true,
+  trailingSlash: !isVercel, // Vercel doesn't need trailing slashes
   
   // Image optimization
   images: {
@@ -36,7 +39,8 @@ const nextConfig: NextConfig = {
   
   // Compiler options
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+    // Don't remove console logs to help with debugging
+    removeConsole: false,
   },
   
   // Webpack configuration
