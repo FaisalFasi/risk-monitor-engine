@@ -89,7 +89,7 @@ export const TrustScoreDisplay: React.FC<TrustScoreDisplayProps> = ({
           <div className={`font-bold ${sizeClasses.score} ${getScoreColor(score.currentScore.total)}`}>
             {score.currentScore.total}/100
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <div className="text-sm mt-1" style={{ color: '#475569' }}>
             {score.trend === 'up' && '↗️ Improving'}
             {score.trend === 'down' && '↘️ Declining'}
             {score.trend === 'stable' && '→ Stable'}
@@ -99,22 +99,22 @@ export const TrustScoreDisplay: React.FC<TrustScoreDisplayProps> = ({
         {/* Score Breakdown */}
         {showBreakdown && (
           <div className="space-y-3">
-            <h4 className="font-semibold text-gray-900 dark:text-gray-100">Score Breakdown</h4>
+            <h4 className="font-semibold" style={{ color: '#0f172a' }}>Score Breakdown</h4>
             
             {/* Performance */}
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <span>📊</span>
-                <span className={sizeClasses.breakdown}>Performance</span>
+                <span className={sizeClasses.breakdown} style={{ color: '#0f172a' }}>Performance</span>
               </span>
               <div className="flex items-center gap-2">
                 <div className="w-20 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                   <div 
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${(score.currentScore.performance / 40) * 100}%` }}
+                    className="h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${(score.currentScore.performance / 40) * 100}%`, backgroundColor: '#2c5bff' }}
                   />
                 </div>
-                <span className={`font-medium ${sizeClasses.breakdown}`}>
+                <span className={`font-medium ${sizeClasses.breakdown}`} style={{ color: '#0f172a' }}>
                   {score.currentScore.performance}/40
                 </span>
               </div>
@@ -124,7 +124,7 @@ export const TrustScoreDisplay: React.FC<TrustScoreDisplayProps> = ({
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <span>🔄</span>
-                <span className={sizeClasses.breakdown}>Reliability</span>
+                <span className={sizeClasses.breakdown} style={{ color: '#0f172a' }}>Reliability</span>
               </span>
               <div className="flex items-center gap-2">
                 <div className="w-20 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -133,7 +133,7 @@ export const TrustScoreDisplay: React.FC<TrustScoreDisplayProps> = ({
                     style={{ width: `${(score.currentScore.reliability / 40) * 100}%` }}
                   />
                 </div>
-                <span className={`font-medium ${sizeClasses.breakdown}`}>
+                <span className={`font-medium ${sizeClasses.breakdown}`} style={{ color: '#0f172a' }}>
                   {score.currentScore.reliability}/40
                 </span>
               </div>
@@ -143,7 +143,7 @@ export const TrustScoreDisplay: React.FC<TrustScoreDisplayProps> = ({
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <span>🛡️</span>
-                <span className={sizeClasses.breakdown}>Safety</span>
+                <span className={sizeClasses.breakdown} style={{ color: '#0f172a' }}>Safety</span>
               </span>
               <div className="flex items-center gap-2">
                 <div className="w-20 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -152,7 +152,7 @@ export const TrustScoreDisplay: React.FC<TrustScoreDisplayProps> = ({
                     style={{ width: `${(score.currentScore.safety / 20) * 100}%` }}
                   />
                 </div>
-                <span className={`font-medium ${sizeClasses.breakdown}`}>
+                <span className={`font-medium ${sizeClasses.breakdown}`} style={{ color: '#0f172a' }}>
                   {score.currentScore.safety}/20
                 </span>
               </div>
@@ -163,39 +163,39 @@ export const TrustScoreDisplay: React.FC<TrustScoreDisplayProps> = ({
         {/* Metrics */}
         {showMetrics && (
           <div className="space-y-3">
-            <h4 className="font-semibold text-gray-900 dark:text-gray-100">Key Metrics</h4>
+            <h4 className="font-semibold" style={{ color: '#0f172a' }}>Key Metrics</h4>
             
             <div className="grid grid-cols-2 gap-3">
               <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <div className={`font-bold ${sizeClasses.metrics} text-green-600 dark:text-green-400`}>
                   {score.metrics.apy.toFixed(1)}%
                 </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400">APY</div>
+                <div className="text-xs" style={{ color: '#64748b' }}>APY</div>
               </div>
               
               <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <div className={`font-bold ${sizeClasses.metrics} text-blue-600 dark:text-blue-400`}>
+                <div className={`font-bold ${sizeClasses.metrics}`} style={{ color: '#2c5bff' }}>
                   {score.metrics.successRate.toFixed(1)}%
                 </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400">Success Rate</div>
+                <div className="text-xs" style={{ color: '#64748b' }}>Success Rate</div>
               </div>
               
               <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <div className={`font-bold ${sizeClasses.metrics} text-purple-600 dark:text-purple-400`}>
                   {score.metrics.uptime.toFixed(1)}%
                 </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400">Uptime</div>
+                <div className="text-xs" style={{ color: '#64748b' }}>Uptime</div>
               </div>
               
               <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <div className={`font-bold ${sizeClasses.metrics} text-orange-600 dark:text-orange-400`}>
                   {score.metrics.age}d
                 </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400">Age</div>
+                <div className="text-xs" style={{ color: '#64748b' }}>Age</div>
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center justify-between text-sm" style={{ color: '#0f172a' }}>
               <span className="flex items-center gap-2">
                 {score.metrics.auditStatus ? '✅' : '❌'}
                 <span>Audited</span>
@@ -212,20 +212,20 @@ export const TrustScoreDisplay: React.FC<TrustScoreDisplayProps> = ({
         {score.previousScore && (
           <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Previous Score:</span>
+              <span style={{ color: '#475569' }}>Previous Score:</span>
               <span className={`font-medium ${getScoreColor(score.previousScore.total)}`}>
                 {score.previousScore.total}/100
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Change:</span>
+              <span style={{ color: '#475569' }}>Change:</span>
               <span className={`font-medium ${
                 score.currentScore.total > score.previousScore.total 
                   ? 'text-green-600 dark:text-green-400' 
                   : score.currentScore.total < score.previousScore.total
                   ? 'text-red-600 dark:text-red-400'
-                  : 'text-gray-600 dark:text-gray-400'
-              }`}>
+                  : ''
+              }`} style={score.currentScore.total === score.previousScore.total ? { color: '#475569' } : {}}>
                 {score.currentScore.total > score.previousScore.total ? '+' : ''}
                 {score.currentScore.total - score.previousScore.total}
               </span>

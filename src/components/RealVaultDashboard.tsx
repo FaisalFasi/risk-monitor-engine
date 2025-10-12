@@ -244,16 +244,16 @@ const RealVaultDashboard: React.FC<RealVaultDashboardProps> = ({ className }) =>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <span className="text-xl">{getTokenIcon(token)}</span>
-                    <span className="font-semibold">{token}</span>
+                    <span className="font-semibold" style={{ color: '#0f172a' }}>{token}</span>
                   </div>
                   <Badge className={getTokenColor(token)}>
                     {token}
                   </Badge>
                 </div>
-                <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                <p className="text-2xl font-bold" style={{ color: '#0f172a' }}>
                   {state?.token_reserves?.[token] || '0'}
                 </p>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
+                <p className="text-sm" style={{ color: '#64748b' }}>
                   Available in vault
                 </p>
               </div>
@@ -277,12 +277,12 @@ const RealVaultDashboard: React.FC<RealVaultDashboardProps> = ({ className }) =>
                 <div key={token} className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-xl">{getTokenIcon(token)}</span>
-                    <span className="font-semibold">{token} Shares</span>
+                    <span className="font-semibold" style={{ color: '#0f172a' }}>{token} Shares</span>
                   </div>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                  <p className="text-2xl font-bold" style={{ color: '#0f172a' }}>
                     {state?.user_shares?.[token] || '0'}
                   </p>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                  <p className="text-sm" style={{ color: '#64748b' }}>
                     Your shares
                   </p>
                 </div>

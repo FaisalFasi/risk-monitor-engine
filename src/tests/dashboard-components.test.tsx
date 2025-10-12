@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import React from 'react';
+import { render } from '@testing-library/react';
+import * as TestingLibrary from '@testing-library/react';
+import '@testing-library/jest-dom/vitest';
+
+const { screen, fireEvent, waitFor } = TestingLibrary;
 import { RiskMonitorDashboard } from '../components/dashboard/RiskMonitorDashboard';
 import { RealTimeAlerts } from '../components/dashboard/RealTimeAlerts';
 import { PerformanceMetrics } from '../components/dashboard/PerformanceMetrics';

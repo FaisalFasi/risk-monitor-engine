@@ -11,23 +11,23 @@ export default function NearIntentsPage() {
   const { account, isConnected } = useNearWallet();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900">
+    <div className="min-h-screen bg-white dark:from-slate-900 dark:via-slate-900 dark:to-slate-900">
       <Header />
       
-      <main className="container mx-auto px-4 py-6 md:py-12 max-w-7xl">
+      <main className="container mx-auto px-4 py-6 md:py-12 max-w-7xl overflow-visible">
         {/* Page Header */}
         <div className="text-center mb-8 md:mb-12">
-          <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3 md:mb-4">
+          <h1 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4" style={{ color: '#0f172a' }}>
             NEAR Token Swap
           </h1>
-          <p className="text-sm md:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto px-4">
+          <p className="text-sm md:text-lg max-w-2xl mx-auto px-4" style={{ color: '#475569' }}>
             Swap tokens on NEAR Protocol with <strong>live market rates</strong> powered by CoinGecko
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 relative">
           {/* Main Swap Interface - Takes center stage */}
-          <div className="lg:col-span-5 xl:col-span-4">
+          <div className="lg:col-span-5 xl:col-span-4 relative z-10">
             <SwapInterface />
           </div>
 
