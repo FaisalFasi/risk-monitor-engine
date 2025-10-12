@@ -88,17 +88,25 @@ export async function createWalletSelector(config?: WalletSelectorConfig) {
       },
       debug: process.env.NODE_ENV === 'development',
       modules: [
-        setupMeteorWallet(),
+        setupMeteorWallet({
+          walletUrl: finalConfig.walletUrl,
+          iconUrl: 'https://wallet.meteorwallet.app/favicon.ico',
+        }),
         // Temporarily disable Sender and Ledger to avoid compatibility issues
         // setupSender(),
         // setupLedger(),
       ],
     });
 
-    console.log('Wallet selector created successfully with nodeUrl:', finalConfig.nodeUrl);
+    console.log('Wallet selector created successfully');
+    console.log('Network:', finalConfig.networkId);
+    console.log('Node URL:', finalConfig.nodeUrl);
+    console.log('Wallet URL:', finalConfig.walletUrl);
+    
     return selector;
   } catch (error) {
     console.error('Error creating wallet selector:', error);
+    console.error('Config that failed:', config);
     throw error;
   }
 }
