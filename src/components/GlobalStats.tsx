@@ -34,12 +34,12 @@ export function GlobalStats() {
   ];
 
   return (
-    <div className="mb-12">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-4">
+    <div className="mb-16">
+      <div className="text-center mb-12">
+        <h2 className="text-4xl font-bold mb-4 tracking-tight" style={{ color: '#0f172a' }}>
           Platform Overview
         </h2>
-        <p className="text-lg text-slate-800 dark:text-slate-300">
+        <p className="text-lg leading-relaxed" style={{ color: '#475569' }}>
           Real-time statistics from our vault and registry contracts
         </p>
       </div>
@@ -48,24 +48,24 @@ export function GlobalStats() {
         {stats.map((stat, index) => (
           <div 
             key={index}
-            className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-slate-200/50 dark:border-slate-700/50 hover:shadow-xl transition-all duration-300 hover:scale-105"
+            className="bg-white dark:bg-slate-800/80 rounded-xl p-6 shadow-sm border border-[#f1f5f9] dark:border-slate-700/50 hover:shadow-md transition-all duration-200"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="text-3xl">{stat.icon}</div>
-              <div className={`px-2 py-1 rounded-full text-xs font-semibold ${
+              <div className={`px-3 py-1 rounded-full text-xs font-bold ${
                 stat.changeType === 'positive' 
-                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                  : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                  ? 'bg-[#D1FAE5] dark:bg-green-900/30 text-[#065F46] dark:text-green-300'
+                  : 'bg-[#FEE2E2] dark:bg-red-900/30 text-[#991B1B] dark:text-red-300'
               }`}>
                 {stat.change}
               </div>
             </div>
             
             <div className="mb-2">
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              <h3 className="text-3xl font-bold mb-1 tracking-tight" style={{ color: '#0f172a' }}>
                 {stat.value}
               </h3>
-              <p className="text-sm font-medium text-slate-800 dark:text-slate-400">
+              <p className="text-sm font-semibold" style={{ color: '#64748b' }}>
                 {stat.title}
               </p>
             </div>

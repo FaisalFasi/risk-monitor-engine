@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { useNearWallet } from '@/hooks/useNearWallet';
 import { useVaultContract } from '@/hooks/useVaultContract';
 import { TokenType, VaultContractConfig } from '@/types/vault';
+import { RefreshCw, DollarSign, Coins, Download, Upload, Clock, Play, Pause, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 interface RealVaultDashboardProps {
   className?: string;
@@ -115,13 +117,58 @@ const RealVaultDashboard: React.FC<RealVaultDashboardProps> = ({ className }) =>
     }
   };
 
-  const getTokenIcon = (token: TokenType) => {
+  const getTokenIconUrl = (token: TokenType): string | null => {
     switch (token) {
-      case TokenType.WNEAR: return '🌙';
-      case TokenType.USDC: return '💵';
-      case TokenType.USDT: return '💰';
-      default: return '🪙';
+      case TokenType.WNEAR: return 'https://assets.coingecko.com/coins/images/10365/small/near.jpg';
+      case TokenType.USDC: return 'https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png';
+      case TokenType.USDT: return 'https://assets.coingecko.com/coins/images/325/small/Tether.png';
+      default: return null;
     }
+  };
+
+  const getTokenFallbackIcon = (token: TokenType) => {
+    switch (token) {
+      case TokenType.WNEAR: return <RefreshCw className="w-6 h-6 text-purple-500" />;
+      case TokenType.USDC: return <DollarSign className="w-6 h-6 text-blue-600" />;
+      case TokenType.USDT: return <DollarSign className="w-6 h-6 text-green-600" />;
+      default: return <Coins className="w-6 h-6 text-gray-500" />;
+    }
+  };
+
+  const TokenIcon = ({ token, size = 'md' }: { token: TokenType; size?: 'sm' | 'md' | 'lg' }) => {
+    const [imageError, setImageError] = useState(false);
+    const iconUrl = getTokenIconUrl(token);
+    
+    const sizeClasses = {
+      sm: { container: 'w-5 h-5', pixels: 20 },
+      md: { container: 'w-6 h-6', pixels: 24 },
+      lg: { container: 'w-8 h-8', pixels: 32 }
+    };
+    
+    const sizes = sizeClasses[size];
+    
+    if (iconUrl && !imageError) {
+      return (
+        <div className={`relative ${sizes.container} flex-shrink-0`}>
+          <Image
+            src={iconUrl}
+            alt={token}
+            width={sizes.pixels}
+            height={sizes.pixels}
+            className="rounded-full"
+            onError={() => setImageError(true)}
+            unoptimized
+          />
+          {token === TokenType.WNEAR && (
+            <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-purple-500 rounded-full flex items-center justify-center">
+              <RefreshCw className="w-1.5 h-1.5 text-white" strokeWidth={3} />
+            </div>
+          )}
+        </div>
+      );
+    }
+    
+    return getTokenFallbackIcon(token);
   };
 
   const getTokenColor = (token: TokenType) => {
@@ -200,9 +247,13 @@ const RealVaultDashboard: React.FC<RealVaultDashboardProps> = ({ className }) =>
               <p className="text-slate-600 dark:text-slate-400">Management Fee</p>
             </div>
             <div className="text-center p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {config?.is_paused ? '⏸️' : '▶️'}
-              </p>
+              <div className="flex justify-center mb-2">
+                {config?.is_paused ? (
+                  <Pause className="w-8 h-8 text-orange-600 dark:text-orange-400" />
+                ) : (
+                  <Play className="w-8 h-8 text-green-600 dark:text-green-400" />
+                )}
+              </div>
               <p className="text-slate-600 dark:text-slate-400">
                 {config?.is_paused ? 'Paused' : 'Active'}
               </p>
@@ -215,7 +266,10 @@ const RealVaultDashboard: React.FC<RealVaultDashboardProps> = ({ className }) =>
       {vaultError && (
         <Card className="border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20">
           <CardHeader>
-            <CardTitle className="text-yellow-800 dark:text-yellow-200">⚠️ Vault Contract Status</CardTitle>
+            <CardTitle className="text-yellow-800 dark:text-yellow-200 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5" />
+              Vault Contract Status
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -243,8 +297,8 @@ const RealVaultDashboard: React.FC<RealVaultDashboardProps> = ({ className }) =>
               <div key={token} className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xl">{getTokenIcon(token)}</span>
-                    <span className="font-semibold">{token}</span>
+                    <TokenIcon token={token} size="md" />
+                    <span className="font-semibold text-slate-900 dark:text-slate-100">{token}</span>
                   </div>
                   <Badge className={getTokenColor(token)}>
                     {token}
@@ -276,8 +330,8 @@ const RealVaultDashboard: React.FC<RealVaultDashboardProps> = ({ className }) =>
               {Object.values(TokenType).map((token) => (
                 <div key={token} className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xl">{getTokenIcon(token)}</span>
-                    <span className="font-semibold">{token} Shares</span>
+                    <TokenIcon token={token} size="md" />
+                    <span className="font-semibold text-slate-900 dark:text-slate-100">{token} Shares</span>
                   </div>
                   <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                     {state?.user_shares?.[token] || '0'}
@@ -318,8 +372,8 @@ const RealVaultDashboard: React.FC<RealVaultDashboardProps> = ({ className }) =>
                     }`}
                   >
                     <div className="flex items-center justify-center gap-2">
-                      <span className="text-xl">{getTokenIcon(token)}</span>
-                      <span className="font-medium">{token}</span>
+                      <TokenIcon token={token} size="lg" />
+                      <span className="font-medium text-slate-900 dark:text-slate-100">{token}</span>
                     </div>
                   </button>
                 ))}
@@ -341,9 +395,10 @@ const RealVaultDashboard: React.FC<RealVaultDashboardProps> = ({ className }) =>
                 <Button
                   onClick={handleDeposit}
                   disabled={isDepositing || !depositAmount || parseFloat(depositAmount) <= 0}
-                  className="px-6"
+                  className="px-6 flex items-center gap-2"
                 >
-                  {isDepositing ? '⏳' : '📥'} Deposit
+                  {isDepositing ? <Clock className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                  Deposit
                 </Button>
               </div>
             </div>
@@ -377,9 +432,10 @@ const RealVaultDashboard: React.FC<RealVaultDashboardProps> = ({ className }) =>
                   onClick={handleWithdraw}
                   disabled={isWithdrawing || !withdrawAmount || parseFloat(withdrawAmount) <= 0}
                   variant="outline"
-                  className="px-6"
+                  className="px-6 flex items-center gap-2"
                 >
-                  {isWithdrawing ? '⏳' : '📤'} Withdraw
+                  {isWithdrawing ? <Clock className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                  Withdraw
                 </Button>
               </div>
             </div>
@@ -391,8 +447,9 @@ const RealVaultDashboard: React.FC<RealVaultDashboardProps> = ({ className }) =>
       {transactionResult && (
         <Card className={transactionResult.success ? 'border-green-200 bg-green-50 dark:bg-green-900/20' : 'border-red-200 bg-red-50 dark:bg-red-900/20'}>
           <CardHeader>
-            <CardTitle className={transactionResult.success ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}>
-              {transactionResult.success ? '✅ Transaction Successful' : '❌ Transaction Failed'}
+            <CardTitle className={`flex items-center gap-2 ${transactionResult.success ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}`}>
+              {transactionResult.success ? <CheckCircle2 className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
+              {transactionResult.success ? 'Transaction Successful' : 'Transaction Failed'}
             </CardTitle>
           </CardHeader>
           <CardContent>

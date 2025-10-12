@@ -1,9 +1,10 @@
 import React from 'react';
 import { Card, CardContent } from './Card';
 import { Button } from './Button';
+import { ClipboardList, LucideIcon } from 'lucide-react';
 
 interface EmptyStateProps {
-  icon?: string;
+  icon?: React.ReactNode | LucideIcon;
   title: string;
   description: string;
   actionText?: string;
@@ -12,17 +13,30 @@ interface EmptyStateProps {
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
-  icon = '📋',
+  icon,
   title,
   description,
   actionText,
   onAction,
   className = ''
 }) => {
+  const IconComponent = icon as LucideIcon;
+  const defaultIcon = <ClipboardList className="w-16 h-16 mx-auto text-slate-400" />;
+  
   return (
     <Card className={`text-center py-12 ${className}`}>
       <CardContent>
-        <div className="text-6xl mb-4">{icon}</div>
+        <div className="mb-4">
+          {icon ? (
+            typeof icon === 'function' ? (
+              <IconComponent className="w-16 h-16 mx-auto text-slate-400" />
+            ) : (
+              icon
+            )
+          ) : (
+            defaultIcon
+          )}
+        </div>
         <h3 className="text-xl font-semibold mb-2 text-slate-900 dark:text-slate-100">
           {title}
         </h3>

@@ -94,13 +94,21 @@ export function useNearWallet(): NearWalletState & NearWalletActions {
   }, []);
 
   const handleAccountChange = useCallback(async (account: any) => {
-    if (!account) {
+    if (!account || !account.accountId) {
+      console.log('No account or invalid account object:', account);
       setAccount(null);
       setIsConnected(false);
       return;
     }
 
     try {
+      console.log('Handling account change for:', account.accountId);
+      
+      // Validate account object
+      if (typeof account.accountId !== 'string' || !account.accountId) {
+        throw new Error('Invalid account ID');
+      }
+      
       console.log('Fetching real blockchain data for:', account.accountId);
       
       // Get account balance and tokens
@@ -113,9 +121,9 @@ export function useNearWallet(): NearWalletState & NearWalletActions {
       
       const nearAccount: NearAccount = {
         accountId: account.accountId,
-        balance: balance,
+        balance: balance || '0',
         isSignedIn: true,
-        tokens: tokens,
+        tokens: tokens || [],
       };
       
       setAccount(nearAccount);
@@ -127,7 +135,13 @@ export function useNearWallet(): NearWalletState & NearWalletActions {
       
     } catch (err) {
       console.error('Error handling account change:', err);
-      setError('Failed to load account information');
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      
+      if (errorMessage.includes('signer')) {
+        setError('Wallet signer error. Please refresh the page and try reconnecting.');
+      } else {
+        setError('Failed to load account information. Please try reconnecting.');
+      }
     }
   }, []);
 
@@ -267,12 +281,17 @@ export function useNearWallet(): NearWalletState & NearWalletActions {
     } catch (err) {
       let errorMessage = err instanceof Error ? err.message : 'Failed to connect wallet';
       
-      // Check if it's an insufficient balance error
-      if (errorMessage.includes('does not have enough balance') || errorMessage.includes('balance 0')) {
+      console.error('Wallet connection error details:', err);
+      
+      // Check for specific error types
+      if (errorMessage.includes('signer')) {
+        errorMessage = 'Wallet initialization error. Please try: 1) Refresh the page, 2) Clear browser cache, 3) Use a different browser';
+        console.error('Signer error - wallet not properly initialized:', err);
+      } else if (errorMessage.includes('does not have enough balance') || errorMessage.includes('balance 0')) {
         errorMessage = 'Insufficient testnet NEAR balance. Get free testnet tokens at: https://near-faucet.io/';
         console.error('Insufficient balance error:', err);
       } else {
-        console.error('Wallet connection error:', err);
+        console.error('Generic wallet connection error:', err);
       }
       
       setError(errorMessage);

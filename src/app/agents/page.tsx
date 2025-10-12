@@ -93,11 +93,11 @@ export default function AgentsPage() {
   const currentMetrics = performanceMetrics[selectedAgentId];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-white dark:bg-slate-900">
       <Header />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-slate-100">Agent Performance & Reputation</h1>
+          <h1 className="text-3xl font-bold" style={{ color: '#0f172a' }}>Agent Performance & Reputation</h1>
           <p className="mt-2 text-gray-600 dark:text-slate-300">
             Monitor agent performance metrics and reputation scores
           </p>

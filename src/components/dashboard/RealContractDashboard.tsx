@@ -13,6 +13,12 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { OpportunityCard } from '@/components/OpportunityCard';
 import { TransactionHistory } from '@/components/TransactionHistory';
+import { 
+  Link, Wallet, Gem, BarChart3, ClipboardList, 
+  Download, Upload, RefreshCw, Clock, Globe, 
+  Coins, Landmark, TrendingUp, XCircle, 
+  CheckCircle2, ExternalLink, DollarSign
+} from 'lucide-react';
 
 
 export const RealContractDashboard: React.FC = () => {
@@ -197,7 +203,10 @@ const RealContractDashboardContent: React.FC = () => {
       <div className="container mx-auto px-4 py-8">
         <Card className="border-red-200 bg-red-50 dark:bg-red-900/20">
           <CardHeader>
-            <CardTitle className="text-red-800 dark:text-red-200">❌ Wallet Error</CardTitle>
+            <CardTitle className="text-red-800 dark:text-red-200 flex items-center gap-2">
+              <XCircle className="w-5 h-5" />
+              Wallet Error
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-red-700 dark:text-red-300 mb-4">{error}</p>
@@ -254,9 +263,10 @@ const RealContractDashboardContent: React.FC = () => {
           <Button 
             onClick={handleConnectWallet}
             size="lg"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg flex items-center gap-2"
           >
-            🔗 Connect NEAR Wallet
+            <Link className="w-5 h-5" />
+            Connect NEAR Wallet
           </Button>
           
           <p className="text-sm text-slate-500 dark:text-slate-500 mt-4">
@@ -330,7 +340,10 @@ const RealContractDashboardContent: React.FC = () => {
         {globalStatsError && (
           <Card className="border-red-200 bg-red-50 dark:bg-red-900/20 mb-12">
             <CardHeader>
-              <CardTitle className="text-red-800 dark:text-red-200">❌ Failed to Load Global Stats</CardTitle>
+              <CardTitle className="text-red-800 dark:text-red-200 flex items-center gap-2">
+                <XCircle className="w-5 h-5" />
+                Failed to Load Global Stats
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-red-700 dark:text-red-300 mb-4">{globalStatsError}</p>
@@ -376,7 +389,10 @@ const RealContractDashboardContent: React.FC = () => {
           {opportunitiesError && (
             <Card className="border-red-200 bg-red-50 dark:bg-red-900/20">
               <CardHeader>
-                <CardTitle className="text-red-800 dark:text-red-200">❌ Failed to Load Opportunities</CardTitle>
+                <CardTitle className="text-red-800 dark:text-red-200 flex items-center gap-2">
+                  <XCircle className="w-5 h-5" />
+                  Failed to Load Opportunities
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-red-700 dark:text-red-300 mb-4">{opportunitiesError}</p>
@@ -449,9 +465,11 @@ const RealContractDashboardContent: React.FC = () => {
       <Card className="mb-8">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            💰 Real Blockchain Balance
-            <Button onClick={handleRefreshAll} variant="outline" size="sm" disabled={isRefreshing}>
-              {isRefreshing ? 'Refreshing...' : '🔄 Refresh Data'}
+            <Wallet className="w-5 h-5" />
+            Real Blockchain Balance
+            <Button onClick={handleRefreshAll} variant="outline" size="sm" disabled={isRefreshing} className="flex items-center gap-2">
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
             </Button>
           </CardTitle>
           <CardDescription>Real-time account information from NEAR testnet</CardDescription>
@@ -464,28 +482,36 @@ const RealContractDashboardContent: React.FC = () => {
                 {account?.balance || '0'} NEAR
               </p>
               <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">Total Balance</p>
-              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">💰 Native Token</p>
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 flex items-center justify-center gap-1">
+                <Wallet className="w-3 h-3" /> Native Token
+              </p>
             </div>
             <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
               <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                 testnet
               </p>
               <p className="text-sm text-purple-700 dark:text-purple-300 mt-1">Network</p>
-              <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">🌐 NEAR Protocol</p>
+              <p className="text-xs text-purple-600 dark:text-purple-400 mt-1 flex items-center justify-center gap-1">
+                <Globe className="w-3 h-3" /> NEAR Protocol
+              </p>
             </div>
             <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
               <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {account?.tokens?.length || 0}
               </p>
               <p className="text-sm text-green-700 dark:text-green-300 mt-1">Token Types</p>
-              <p className="text-xs text-green-600 dark:text-green-400 mt-1">🪙 FT Holdings</p>
+              <p className="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center justify-center gap-1">
+                <Coins className="w-3 h-3" /> FT Holdings
+              </p>
             </div>
             <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
-              <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                ✅ Active
+              <p className="text-2xl font-bold text-orange-600 dark:text-orange-400 flex items-center justify-center gap-2">
+                <CheckCircle2 className="w-6 h-6" /> Active
               </p>
               <p className="text-sm text-orange-700 dark:text-orange-300 mt-1">Status</p>
-              <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">🟢 Connected</p>
+              <p className="text-xs text-orange-600 dark:text-orange-400 mt-1 flex items-center justify-center gap-1">
+                <CheckCircle2 className="w-3 h-3" /> Connected
+              </p>
             </div>
           </div>
 
@@ -493,7 +519,8 @@ const RealContractDashboardContent: React.FC = () => {
           {account?.tokens && account.tokens.length > 0 && (
             <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
               <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
-                🪙 Token Holdings
+                <Coins className="w-5 h-5" />
+                Token Holdings
                 <StatusBadge status="success" text="Active" />
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -603,11 +630,12 @@ const RealContractDashboardContent: React.FC = () => {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-6 px-2 text-xs text-blue-500 hover:text-blue-700 w-fit"
+                                className="h-6 px-2 text-xs text-blue-500 hover:text-blue-700 w-fit flex items-center gap-1"
                                 onClick={() => window.open(`https://testnet.nearblocks.io/address/${token.contract}`, '_blank')}
                                 title="View on NEAR Explorer"
                               >
-                                🔗 Explorer
+                                <ExternalLink className="w-3 h-3" />
+                                Explorer
                               </Button>
                             </div>
                           </div>
@@ -624,7 +652,7 @@ const RealContractDashboardContent: React.FC = () => {
           {(!account?.tokens || account.tokens.length === 0) && (
             <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
               <div className="text-center py-8">
-                <div className="text-4xl mb-2">🪙</div>
+                <Coins className="w-16 h-16 mx-auto mb-4 text-slate-400" />
                 <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">No Token Holdings</h3>
                 <p className="text-slate-600 dark:text-slate-400 text-sm">
                   Your account doesn't have any fungible token holdings yet.
@@ -640,7 +668,8 @@ const RealContractDashboardContent: React.FC = () => {
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              🏦 My Vault Portfolio
+              <Landmark className="w-5 h-5" />
+              My Vault Portfolio
               <StatusBadge status="success" text="Active" />
             </CardTitle>
             <CardDescription>Your complete vault holdings, performance, and transaction history</CardDescription>
@@ -653,7 +682,9 @@ const RealContractDashboardContent: React.FC = () => {
                   {vaultData.userDeposits} NEAR
                 </div>
                 <div className="text-sm text-blue-700 dark:text-blue-300 mt-1">Total Deposits</div>
-                <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">💰 Principal</div>
+                <div className="text-xs text-blue-600 dark:text-blue-400 mt-1 flex items-center justify-center gap-1">
+                  <Wallet className="w-3 h-3" /> Principal
+                </div>
               </div>
               
               <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
@@ -661,7 +692,9 @@ const RealContractDashboardContent: React.FC = () => {
                   {formatNumber(vaultData.userShares.toString())}
                 </div>
                 <div className="text-sm text-purple-700 dark:text-purple-300 mt-1">Vault Shares</div>
-                <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">📊 LP Tokens</div>
+                <div className="text-xs text-purple-600 dark:text-purple-400 mt-1 flex items-center justify-center gap-1">
+                  <BarChart3 className="w-3 h-3" /> LP Tokens
+                </div>
               </div>
               
               <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
@@ -669,7 +702,9 @@ const RealContractDashboardContent: React.FC = () => {
                   {vaultData.totalValue} NEAR
                 </div>
                 <div className="text-sm text-green-700 dark:text-green-300 mt-1">Total Value</div>
-                <div className="text-xs text-green-600 dark:text-green-400 mt-1">💎 Current Worth</div>
+                <div className="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center justify-center gap-1">
+                  <Gem className="w-3 h-3" /> Current Worth
+                </div>
               </div>
               
               <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
@@ -677,7 +712,9 @@ const RealContractDashboardContent: React.FC = () => {
                   +{vaultData.yield} NEAR
                 </div>
                 <div className="text-sm text-orange-700 dark:text-orange-300 mt-1">Yield Generated</div>
-                <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">📈 Earnings</div>
+                <div className="text-xs text-orange-600 dark:text-orange-400 mt-1 flex items-center justify-center gap-1">
+                  <TrendingUp className="w-3 h-3" /> Earnings
+                </div>
               </div>
             </div>
 
@@ -687,7 +724,8 @@ const RealContractDashboardContent: React.FC = () => {
               <Card className="bg-gray-50 dark:bg-gray-800">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center gap-2">
-                    📊 Portfolio Breakdown
+                    <BarChart3 className="w-5 h-5" />
+                    Portfolio Breakdown
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -722,7 +760,8 @@ const RealContractDashboardContent: React.FC = () => {
               <Card className="bg-gray-50 dark:bg-gray-800">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center gap-2">
-                    📈 Performance Metrics
+                    <TrendingUp className="w-5 h-5" />
+                    Performance Metrics
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -768,10 +807,11 @@ const RealContractDashboardContent: React.FC = () => {
                       console.error('Deposit error:', error);
                     }
                   }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
                   disabled={depositState.isLoading}
                 >
-                  {depositState.isLoading ? 'Processing...' : '💰 Deposit More'}
+                  <Download className="w-4 h-4" />
+                  {depositState.isLoading ? 'Processing...' : 'Deposit More'}
                 </Button>
                 <Button 
                   onClick={async () => {
@@ -786,15 +826,19 @@ const RealContractDashboardContent: React.FC = () => {
                   }}
                   variant="outline"
                   disabled={withdrawState.isLoading}
+                  className="flex items-center gap-2"
                 >
-                  {withdrawState.isLoading ? 'Processing...' : '📤 Withdraw'}
+                  <Upload className="w-4 h-4" />
+                  {withdrawState.isLoading ? 'Processing...' : 'Withdraw'}
                 </Button>
                 <Button 
                   onClick={() => refreshVaultData(account?.accountId || '')} 
                   variant="outline"
                   disabled={isRefreshing}
+                  className="flex items-center gap-2"
                 >
-                  {isRefreshing ? 'Refreshing...' : '🔄 Refresh Data'}
+                  <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
                 </Button>
 
               </div>
@@ -825,7 +869,10 @@ const RealContractDashboardContent: React.FC = () => {
       {vaultDataError && (
         <Card className="border-red-200 bg-red-50 dark:bg-red-900/20 mb-8">
           <CardHeader>
-            <CardTitle className="text-red-800 dark:text-red-200">❌ Failed to Load Vault Data</CardTitle>
+            <CardTitle className="text-red-800 dark:text-red-200 flex items-center gap-2">
+              <XCircle className="w-5 h-5" />
+              Failed to Load Vault Data
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-red-700 dark:text-red-300 mb-4">{vaultDataError}</p>
@@ -856,7 +903,10 @@ const RealContractDashboardContent: React.FC = () => {
               <Card className="border-red-200 bg-red-50 dark:bg-red-900/20">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
-                    <p className="text-red-700 dark:text-red-300">❌ Deposit Error: {depositState.error}</p>
+                    <p className="text-red-700 dark:text-red-300 flex items-center gap-2">
+                      <XCircle className="w-4 h-4" />
+                      Deposit Error: {depositState.error}
+                    </p>
                     <Button onClick={() => clearError('deposit')} variant="outline" size="sm">Dismiss</Button>
                   </div>
                 </CardContent>
@@ -866,7 +916,10 @@ const RealContractDashboardContent: React.FC = () => {
               <Card className="border-red-200 bg-red-50 dark:bg-red-900/20">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
-                    <p className="text-red-700 dark:text-red-300">❌ Withdrawal Error: {withdrawState.error}</p>
+                    <p className="text-red-700 dark:text-red-300 flex items-center gap-2">
+                      <XCircle className="w-4 h-4" />
+                      Withdrawal Error: {withdrawState.error}
+                    </p>
                     <Button onClick={() => clearError('withdraw')} variant="outline" size="sm">Dismiss</Button>
                   </div>
                 </CardContent>
@@ -876,7 +929,10 @@ const RealContractDashboardContent: React.FC = () => {
               <Card className="border-red-200 bg-red-50 dark:bg-red-900/20">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
-                    <p className="text-red-700 dark:text-red-300">❌ Allocation Error: {allocateState.error}</p>
+                    <p className="text-red-700 dark:text-red-300 flex items-center gap-2">
+                      <XCircle className="w-4 h-4" />
+                      Allocation Error: {allocateState.error}
+                    </p>
                     <Button onClick={() => clearError('allocate')} variant="outline" size="sm">Dismiss</Button>
                   </div>
                 </CardContent>
@@ -892,8 +948,9 @@ const RealContractDashboardContent: React.FC = () => {
               <Card className="border-green-200 bg-green-50 dark:bg-green-900/20">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
-                    <p className="text-green-700 dark:text-green-300">
-                      ✅ Deposit successful! TX: {depositState.result.txHash?.slice(0, 10)}...
+                    <p className="text-green-700 dark:text-green-300 flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Deposit successful! TX: {depositState.result.txHash?.slice(0, 10)}...
                     </p>
                     <Button onClick={() => clearError('deposit')} variant="outline" size="sm">Dismiss</Button>
                   </div>
@@ -904,8 +961,9 @@ const RealContractDashboardContent: React.FC = () => {
               <Card className="border-green-200 bg-green-50 dark:bg-green-900/20">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
-                    <p className="text-green-700 dark:text-green-300">
-                      ✅ Withdrawal successful! TX: {withdrawState.result.txHash?.slice(0, 10)}...
+                    <p className="text-green-700 dark:text-green-300 flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Withdrawal successful! TX: {withdrawState.result.txHash?.slice(0, 10)}...
                     </p>
                     <Button onClick={() => clearError('withdraw')} variant="outline" size="sm">Dismiss</Button>
                   </div>
@@ -916,8 +974,9 @@ const RealContractDashboardContent: React.FC = () => {
               <Card className="border-green-200 bg-green-50 dark:bg-green-900/20">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
-                    <p className="text-green-700 dark:text-green-300">
-                      ✅ Allocation successful! TX: {allocateState.result.txHash?.slice(0, 10)}...
+                    <p className="text-green-700 dark:text-green-300 flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Allocation successful! TX: {allocateState.result.txHash?.slice(0, 10)}...
                     </p>
                     <Button onClick={() => clearError('allocate')} variant="outline" size="sm">Dismiss</Button>
                   </div>
@@ -945,11 +1004,12 @@ const RealContractDashboardContent: React.FC = () => {
       </div>
 
       {/* Enhanced Transaction History */}
-      {vaultData?.events && vaultData.events.length > 0 && (
+        {vaultData?.events && vaultData.events.length > 0 && (
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              📋 Transaction History
+              <ClipboardList className="w-5 h-5" />
+              Transaction History
               <Badge variant="outline">{vaultData.events.length} transactions</Badge>
             </CardTitle>
             <CardDescription>Complete history of your vault interactions and blockchain transactions</CardDescription>
@@ -964,10 +1024,11 @@ const RealContractDashboardContent: React.FC = () => {
                         event.type === 'deposit' ? 'default' : 
                         event.type === 'allocation' ? 'secondary' : 'destructive'
                       }
-                      className="flex-shrink-0"
+                      className="flex-shrink-0 flex items-center gap-1"
                     >
-                      {event.type === 'deposit' ? '📥' : 
-                       event.type === 'allocation' ? '🔄' : '📤'} {event.type}
+                      {event.type === 'deposit' ? <Download className="w-3 h-3" /> : 
+                       event.type === 'allocation' ? <RefreshCw className="w-3 h-3" /> : <Upload className="w-3 h-3" />} 
+                      {event.type}
                     </Badge>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
@@ -982,10 +1043,12 @@ const RealContractDashboardContent: React.FC = () => {
                       </div>
                       <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
                         <span className="flex items-center gap-1">
-                          🕒 {new Date(event.timestamp).toLocaleDateString()}
+                          <Clock className="w-3 h-3" />
+                          {new Date(event.timestamp).toLocaleDateString()}
                         </span>
                         <span className="flex items-center gap-1">
-                          ⏰ {new Date(event.timestamp).toLocaleTimeString()}
+                          <Clock className="w-3 h-3" />
+                          {new Date(event.timestamp).toLocaleTimeString()}
                         </span>
                       </div>
                     </div>
@@ -1006,11 +1069,11 @@ const RealContractDashboardContent: React.FC = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-6 w-6 p-0 text-slate-400 hover:text-slate-600"
+                          className="h-6 w-6 p-0 text-slate-400 hover:text-slate-600 flex items-center justify-center"
                           onClick={() => window.open(`https://explorer.near.org/transactions/${event.txHash}`, '_blank')}
                           title="View on NEAR Explorer"
                         >
-                          🔗
+                          <ExternalLink className="w-3 h-3" />
                         </Button>
                       )}
                     </div>

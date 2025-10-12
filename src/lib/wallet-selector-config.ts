@@ -2,6 +2,7 @@ import { setupWalletSelector } from '@near-wallet-selector/core';
 import { setupModal } from '@near-wallet-selector/modal-ui';
 import { setupLedger } from '@near-wallet-selector/ledger';
 import { setupMeteorWallet } from '@near-wallet-selector/meteor-wallet';
+import { setupBitteWallet } from '@near-wallet-selector/bitte-wallet';
 import { setupSender } from '@near-wallet-selector/sender';
 
 // Import modal CSS
@@ -88,17 +89,20 @@ export async function createWalletSelector(config?: WalletSelectorConfig) {
       },
       debug: process.env.NODE_ENV === 'development',
       modules: [
+        setupBitteWallet(),
         setupMeteorWallet(),
-        // Temporarily disable Sender and Ledger to avoid compatibility issues
-        // setupSender(),
-        // setupLedger(),
       ],
     });
 
-    console.log('Wallet selector created successfully with nodeUrl:', finalConfig.nodeUrl);
+    console.log('Wallet selector created successfully');
+    console.log('Network:', finalConfig.networkId);
+    console.log('Node URL:', finalConfig.nodeUrl);
+    console.log('Wallet URL:', finalConfig.walletUrl);
+    
     return selector;
   } catch (error) {
     console.error('Error creating wallet selector:', error);
+    console.error('Config that failed:', config);
     throw error;
   }
 }

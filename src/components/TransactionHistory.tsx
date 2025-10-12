@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Transaction } from '@/types/tokens';
 import { NearTransactionHistory } from '@/services/near-transaction-history';
+import { RefreshCw } from 'lucide-react';
 
 interface TransactionHistoryProps {
   accountId: string;
@@ -145,8 +146,10 @@ export function TransactionHistory({
             disabled={loading}
             variant="outline"
             size="sm"
+            className="flex items-center gap-2"
           >
-            {loading ? '🔄' : '↻'} Refresh
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
           </Button>
         </div>
       </CardHeader>
@@ -159,14 +162,14 @@ export function TransactionHistory({
 
         {loading && transactions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12">
-            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Loading transactions...</p>
+            <div className="w-8 h-8 border-4 border-t-transparent rounded-full animate-spin mb-4" style={{ borderColor: '#2c5bff', borderTopColor: 'transparent' }}></div>
+            <p className="text-sm" style={{ color: '#475569' }}>Loading transactions...</p>
           </div>
         ) : transactions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12">
             <div className="text-4xl mb-4">📭</div>
-            <p className="text-slate-500 dark:text-slate-400">No transactions found</p>
-            <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
+            <p style={{ color: '#0f172a' }}>No transactions found</p>
+            <p className="text-sm mt-1" style={{ color: '#64748b' }}>
               Make a swap or transfer to see your history here
             </p>
           </div>
@@ -186,21 +189,21 @@ export function TransactionHistory({
                       {(tx.status || 'pending').toUpperCase()}
                     </Badge>
                   </div>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                  <span className="text-xs" style={{ color: '#64748b' }}>
                     {tx.timestamp ? formatTime(tx.timestamp) : 'N/A'}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-2">
                   <div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">From</p>
-                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                    <p className="text-xs" style={{ color: '#64748b' }}>From</p>
+                    <p className="text-sm font-medium" style={{ color: '#0f172a' }}>
                       {truncateAddress(tx.from)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">To</p>
-                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                    <p className="text-xs" style={{ color: '#64748b' }}>To</p>
+                    <p className="text-sm font-medium" style={{ color: '#0f172a' }}>
                       {truncateAddress(tx.to)}
                     </p>
                   </div>
@@ -208,10 +211,10 @@ export function TransactionHistory({
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                    <p className="text-sm font-medium" style={{ color: '#0f172a' }}>
                       {tx.value || '0 NEAR'}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs" style={{ color: '#64748b' }}>
                       Fee: {tx.fee || '0 NEAR'}
                     </p>
                   </div>
@@ -220,7 +223,8 @@ export function TransactionHistory({
                       href={tx.explorerUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center space-x-1"
+                      className="text-xs hover:underline flex items-center space-x-1"
+                      style={{ color: '#2c5bff' }}
                     >
                       <span>View</span>
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

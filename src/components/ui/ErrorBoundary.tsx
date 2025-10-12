@@ -1,6 +1,7 @@
 import React, { Component, ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './Card';
 import { Button } from './Button';
+import { XCircle } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -35,8 +36,9 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <Card className="border-red-200 bg-red-50 dark:bg-red-900/20">
           <CardHeader>
-            <CardTitle className="text-red-800 dark:text-red-200">
-              ❌ Something went wrong
+            <CardTitle className="text-red-800 dark:text-red-200 flex items-center gap-2">
+              <XCircle className="w-5 h-5" />
+              Something went wrong
             </CardTitle>
           </CardHeader>
           <CardContent>
