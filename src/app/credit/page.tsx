@@ -41,9 +41,16 @@ export default function CreditVaultsPage() {
     try {
       const response = await fetch('/api/credit');
       const data = await response.json();
+      console.log('Credit API response:', data); // Debug log
+      
       if (data.success && data.data) {
-        // Ensure data.data is an array
-        const vaultsData = Array.isArray(data.data) ? data.data : [];
+        // Handle both nested and non-nested responses
+        const vaultsData = Array.isArray(data.data) 
+          ? data.data 
+          : Array.isArray(data.data.data) 
+            ? data.data.data 
+            : [];
+        console.log('Vaults data:', vaultsData); // Debug log
         setVaults(vaultsData);
       } else {
         setVaults([]);

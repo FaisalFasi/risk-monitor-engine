@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -24,17 +24,72 @@ export function TransactionHistory({
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [offset, setOffset] = useState(0);
+  const [rateLimitInfo, setRateLimitInfo] = useState<{ minutesLeft: number; resetTime: Date | null } | null>(null);
+  const lastFetchRef = useRef<number>(0);
+  const lastAccountRef = useRef<string>('');
 
-  const transactionService = new NearTransactionHistory(network);
+  // Memoize the service instance to prevent recreation on every render
+  const transactionService = useMemo(() => new NearTransactionHistory(network), [network]);
 
+  // Check rate limit status on mount and periodically
   useEffect(() => {
-    loadTransactions();
-  }, [accountId, network]);
+    const checkRateLimit = () => {
+      const status = transactionService.isRateLimited();
+      if (status.limited) {
+        setRateLimitInfo({ minutesLeft: status.minutesLeft, resetTime: status.resetTime });
+      } else {
+        setRateLimitInfo(null);
+      }
+    };
 
-  const loadTransactions = async (loadMore = false) => {
+    checkRateLimit();
+    const interval = setInterval(checkRateLimit, 10000); // Check every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [transactionService]);
+
+  const loadTransactions = useCallback(async (loadMore = false, forceRefresh = false) => {
+    // CHECK RATE LIMIT but don't block - Pikespeak API works even if NearBlocks is limited
+    if (!forceRefresh) {
+      const status = transactionService.isRateLimited();
+      if (status.limited) {
+        console.log('⏰ NearBlocks rate limited, but trying Pikespeak API first...');
+        // Don't block - let Pikespeak API try
+        setRateLimitInfo({ minutesLeft: status.minutesLeft, resetTime: status.resetTime });
+      }
+    }
+
+    // Extra validation
+    if (!accountId || accountId === 'undefined') {
+      console.error('❌ Cannot load transactions: Invalid accountId', accountId);
+      setError('Invalid account ID');
+      setLoading(false);
+      return;
+    }
+
+    // Prevent rapid successive calls (debounce)
+    const now = Date.now();
+    const timeSinceLastFetch = now - lastFetchRef.current;
+    
+    // If account changed, reset the debounce
+    if (lastAccountRef.current !== accountId) {
+      lastAccountRef.current = accountId;
+      lastFetchRef.current = 0;
+    }
+    
+    // Debounce: Don't fetch if less than 2 seconds since last fetch (unless it's a manual refresh)
+    if (!forceRefresh && !loadMore && timeSinceLastFetch < 2000 && lastFetchRef.current !== 0) {
+      console.log('⏳ Skipping fetch - too soon since last request');
+      return;
+    }
+    
+    lastFetchRef.current = now;
+
     try {
       setLoading(true);
       setError(null);
+
+      console.log('📡 Loading transaction history for:', accountId);
 
       const currentOffset = loadMore ? offset : 0;
 
@@ -56,11 +111,43 @@ export function TransactionHistory({
 
     } catch (err) {
       console.error('Error loading transactions:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load transactions');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load transactions';
+      
+      // Check if it's a rate limit error
+      if (errorMessage.includes('429') || errorMessage.toLowerCase().includes('rate limit')) {
+        const status = transactionService.isRateLimited();
+        if (status.limited) {
+          setRateLimitInfo({ minutesLeft: status.minutesLeft, resetTime: status.resetTime });
+          setError(`⚠️ Rate limited. Try again in ${status.minutesLeft} minute(s) at ${status.resetTime?.toLocaleTimeString()}`);
+        } else {
+          setError('⚠️ NearBlocks API rate limit reached. Please wait and click Refresh.');
+        }
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [accountId, network, limit, offset, transactionService]);
+
+  useEffect(() => {
+    // Check rate limit but DON'T block - Pikespeak API should work
+    const status = transactionService.isRateLimited();
+    if (status.limited) {
+      console.log('⏰ NearBlocks rate limited, but trying Pikespeak API...');
+      setRateLimitInfo({ minutesLeft: status.minutesLeft, resetTime: status.resetTime });
+      // Continue anyway - let Pikespeak try
+    }
+
+    // Only load if accountId is valid
+    if (accountId && accountId !== 'undefined') {
+      loadTransactions();
+    } else {
+      console.warn('⚠️ TransactionHistory: Invalid accountId:', accountId);
+      setLoading(false);
+      setError('Please connect your wallet to view transaction history');
+    }
+  }, [accountId, network]);
 
   const handleLoadMore = () => {
     loadTransactions(true);
@@ -68,7 +155,8 @@ export function TransactionHistory({
 
   const handleRefresh = () => {
     setOffset(0);
-    loadTransactions(false);
+    lastFetchRef.current = 0; // Reset debounce timer
+    loadTransactions(false, true); // Force refresh
   };
 
   const getTypeColor = (type: Transaction['type']) => {
@@ -126,52 +214,141 @@ export function TransactionHistory({
   };
 
   const truncateAddress = (address: string | undefined | null, chars = 8) => {
-    if (!address) return 'N/A';
+    if (!address) return 'Unknown';
     if (address.length <= chars * 2) return address;
     return `${address.slice(0, chars)}...${address.slice(-chars)}`;
   };
 
+  const handleClearRateLimit = () => {
+    transactionService.clearRateLimit();
+    setRateLimitInfo(null);
+    setError(null);
+    handleRefresh();
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Transaction History</CardTitle>
-            <CardDescription>
-              Recent transactions for {truncateAddress(accountId, 12)}
-            </CardDescription>
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <a
+          href={`https://testnet.nearblocks.io/address/${accountId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+        >
+          View All on NearBlocks →
+        </a>
+        <Button 
+          onClick={handleRefresh} 
+          disabled={loading || (rateLimitInfo !== null && rateLimitInfo.minutesLeft > 0)}
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          {rateLimitInfo && rateLimitInfo.minutesLeft > 0 ? `Wait ${rateLimitInfo.minutesLeft}m` : 'Refresh'}
+        </Button>
+      </div>
+      <div>
+        {rateLimitInfo && rateLimitInfo.minutesLeft > 0 && (
+          <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg mb-4 border border-yellow-200 dark:border-yellow-800">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">⏰</span>
+              <div className="flex-1">
+                <p className="font-semibold text-yellow-900 dark:text-yellow-200 mb-1">
+                  API Rate Limit Active
+                </p>
+                <p className="text-sm text-yellow-800 dark:text-yellow-300 mb-3">
+                  Too many API requests. History will be available in <strong>{rateLimitInfo.minutesLeft} minute(s)</strong> at {rateLimitInfo.resetTime?.toLocaleTimeString()}.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    onClick={handleClearRateLimit}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    I've Waited - Retry Now
+                  </Button>
+                  <a
+                    href={`https://testnet.nearblocks.io/address/${accountId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors text-xs font-medium"
+                  >
+                    View on Explorer Instead →
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
-          <Button 
-            onClick={handleRefresh} 
-            disabled={loading}
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {error && (
+        )}
+        
+        {error && !rateLimitInfo && (
           <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg mb-4">
             <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+            <p className="text-xs text-red-600 dark:text-red-400 mt-2">
+              💡 You can verify your transactions manually at:{' '}
+              <a 
+                href={`https://testnet.nearblocks.io/address/${accountId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline font-semibold"
+              >
+                NearBlocks Explorer
+              </a>
+            </p>
           </div>
         )}
 
         {loading && transactions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12">
             <div className="w-8 h-8 border-4 border-t-transparent rounded-full animate-spin mb-4" style={{ borderColor: '#2c5bff', borderTopColor: 'transparent' }}></div>
-            <p className="text-sm" style={{ color: '#475569' }}>Loading transactions...</p>
+            <p className="text-sm" style={{ color: '#475569' }}>Loading transactions from Pikespeak API...</p>
           </div>
         ) : transactions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <div className="text-4xl mb-4">📭</div>
-            <p style={{ color: '#0f172a' }}>No transactions found</p>
-            <p className="text-sm mt-1" style={{ color: '#64748b' }}>
-              Make a swap or transfer to see your history here
-            </p>
+          <div className="space-y-4">
+            {/* Main message with retry */}
+            <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-lg border-2 border-slate-200 dark:border-slate-700">
+              <div className="text-center space-y-4">
+                <div className="text-5xl mb-2">⏰</div>
+                <div>
+                  <p className="font-semibold text-lg mb-2" style={{ color: '#0f172a' }}>
+                    Transaction History Temporarily Unavailable
+                  </p>
+                  <p className="text-sm mb-4" style={{ color: '#64748b' }}>
+                    The transaction indexer API is rate limited. Your transactions are safe on the blockchain.
+                  </p>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem('nearblocks_rate_limit');
+                      window.location.reload();
+                    }}
+                    className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm hover:shadow-md flex items-center gap-2"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    Retry Loading History
+                  </button>
+                  
+                  <span className="text-sm text-slate-400">or</span>
+                  
+                  <a
+                    href={`https://testnet.nearblocks.io/address/${accountId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-6 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors font-medium flex items-center gap-2"
+                  >
+                    View on Explorer →
+                  </a>
+                </div>
+                
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-4">
+                  💡 NearBlocks explorer always works and shows all your transactions
+                </p>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="space-y-3">
@@ -196,26 +373,26 @@ export function TransactionHistory({
 
                 <div className="grid grid-cols-2 gap-4 mb-2">
                   <div>
-                    <p className="text-xs" style={{ color: '#64748b' }}>From</p>
-                    <p className="text-sm font-medium" style={{ color: '#0f172a' }}>
-                      {truncateAddress(tx.from)}
+                    <p className="text-xs text-slate-600 dark:text-slate-400">From</p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                      {tx.from || 'Unknown'}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs" style={{ color: '#64748b' }}>To</p>
-                    <p className="text-sm font-medium" style={{ color: '#0f172a' }}>
-                      {truncateAddress(tx.to)}
+                    <p className="text-xs text-slate-600 dark:text-slate-400">To</p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                      {tx.to || 'Unknown'}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium" style={{ color: '#0f172a' }}>
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
                       {tx.value || '0 NEAR'}
                     </p>
-                    <p className="text-xs" style={{ color: '#64748b' }}>
-                      Fee: {tx.fee || '0 NEAR'}
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                      {tx.fee ? `Fee: ${tx.fee}` : 'Fee: ~0.0001 NEAR'}
                     </p>
                   </div>
                   {tx.explorerUrl && (
@@ -249,7 +426,7 @@ export function TransactionHistory({
             )}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

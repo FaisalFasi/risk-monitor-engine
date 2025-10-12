@@ -6,9 +6,10 @@ import { useState, useEffect } from 'react';
 interface NearLoginButtonProps {
   className?: string;
   onLoginSuccess?: (accountId: string) => void;
+  style?: React.CSSProperties;
 }
 
-export function NearLoginButton({ className = '', onLoginSuccess }: NearLoginButtonProps) {
+export function NearLoginButton({ className = '', onLoginSuccess, style }: NearLoginButtonProps) {
   const { 
     account, 
     isLoading, 
@@ -107,6 +108,7 @@ export function NearLoginButton({ className = '', onLoginSuccess }: NearLoginBut
         <button 
           onClick={handleConnect}
           className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+          style={style}
         >
           <div className="flex items-center justify-center space-x-2">
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -124,6 +126,7 @@ export function NearLoginButton({ className = '', onLoginSuccess }: NearLoginBut
       <button 
         onClick={handleSignIn}
         className={`px-6 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${className}`}
+        style={style}
       >
         <div className="flex items-center space-x-2">
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">

@@ -71,6 +71,7 @@ export default function Home() {
               <Image 
                 src="/logo/bod.png" 
                 alt="Bond Credit Logo" 
+                quality={100}
                 width={100}
                 height={100}
                 className="w-[300px] h-full items-center object-contain p-2  "
@@ -142,7 +143,7 @@ export default function Home() {
         {isConnected && account && (
           <>
             <UserVaultSection account={account?.accountId || ''} />
-            <TransactionHistory user={account?.accountId} />
+            <TransactionHistory accountId={account?.accountId || ''} network="testnet" />
           </>
         )}
 

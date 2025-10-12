@@ -91,6 +91,7 @@ export function Header() {
                 alt="Bond Credit Logo" 
                 width={100}
                 height={100}
+                quality={100}
                 // width={isMobile ? 100 : isTablet ? 44 : 48}
                 // height={isMobile ? 36 : isTablet ? 44 : 48}
                 className="w-full h-full object-contain p-2"
@@ -124,10 +125,7 @@ export function Header() {
               Analytics
             </Link>
             <Link href="/near-intents" className="text-[#475569] dark:text-slate-200 hover:text-[#2c5bff] dark:hover:text-blue-400 hover:bg-[#f8fafc] dark:hover:bg-slate-800 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 whitespace-nowrap">
-              NEAR Intents
-            </Link>
-            <Link href="/vault" className="text-[#475569] dark:text-slate-200 hover:text-[#2c5bff] dark:hover:text-blue-400 hover:bg-[#f8fafc] dark:hover:bg-slate-800 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 whitespace-nowrap">
-              Vault
+              Swap & Vault
             </Link>
           </nav>
 
@@ -275,14 +273,7 @@ export function Header() {
                 href="/near-intents"
                 onClick={closeMobileMenu}
               >
-                NEAR Intents
-              </Link>
-              <Link 
-                className="text-[#475569] dark:text-slate-200 hover:text-[#2c5bff] dark:hover:text-blue-400 hover:bg-[#f8fafc] dark:hover:bg-slate-800 px-3 py-3 rounded-lg text-sm font-medium transition-all text-center focus:ring-2 focus:ring-[#2c5bff] focus:ring-offset-2" 
-                href="/vault"
-                onClick={closeMobileMenu}
-              >
-                Vault
+                Swap & Vault
               </Link>
             </nav>
           </div>

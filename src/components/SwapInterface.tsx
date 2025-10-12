@@ -16,10 +16,10 @@ interface SwapResult {
 }
 
 export function SwapInterface() {
-  const { account, isConnected, connect, disconnect, executeTransaction } = useNearWallet();
+  const { account, isConnected, connect, disconnect, executeTransaction, refreshBalance } = useNearWallet();
   
-  // Swap state
-  const [fromToken, setFromToken] = useState<Token>(NEAR_TOKENS.NEAR);
+  // Swap state - Use wNEAR instead of NEAR for swaps
+  const [fromToken, setFromToken] = useState<Token>(NEAR_TOKENS.WNEAR);
   const [toToken, setToToken] = useState<Token>(NEAR_TOKENS.USDC);
   const [amount, setAmount] = useState('');
   const [estimatedOutput, setEstimatedOutput] = useState('0.00');
@@ -127,6 +127,15 @@ export function SwapInterface() {
         transaction: swapTransaction,
       });
 
+      console.log('✅ Swap transaction confirmed!', swapTransaction);
+      console.log('🔄 Refreshing balance from blockchain...');
+      
+      // Refresh balance after successful swap (wait 3 seconds for blockchain to update)
+      setTimeout(async () => {
+        await refreshBalance();
+        console.log('✅ Balance refreshed!');
+      }, 3000);
+      
       // Clear form
       setAmount('');
       setEstimatedOutput('0.00');
@@ -181,6 +190,18 @@ export function SwapInterface() {
               Swap Tokens
             </h2>
             <div className="flex items-center space-x-2">
+              <button
+                onClick={async () => {
+                  console.log('🔄 Manual balance refresh triggered');
+                  await refreshBalance();
+                }}
+                className="p-2 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-lg transition-colors border border-green-200 dark:border-green-800"
+                title="Refresh wallet balance from blockchain"
+              >
+                <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
               <button
                 onClick={handleRefreshPrices}
                 disabled={isLoadingQuote}
@@ -247,7 +268,32 @@ export function SwapInterface() {
               </Button>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-4">
+              {/* Helpful Notice if user tries to swap NEAR */}
+              {fromToken.symbol === 'NEAR' && (
+                <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-200 dark:border-orange-700 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">ℹ️</span>
+                    <div className="flex-1">
+                      <p className="font-semibold text-orange-900 dark:text-orange-200 mb-2">
+                        Want to swap NEAR tokens?
+                      </p>
+                      <p className="text-sm text-orange-800 dark:text-orange-300 mb-3">
+                        Direct NEAR swaps aren't supported. First wrap your NEAR to wNEAR:
+                      </p>
+                      <ol className="list-decimal list-inside text-sm text-orange-800 dark:text-orange-300 space-y-1 mb-3">
+                        <li>Go to <a href="/near-intents/vault" className="underline font-semibold">Vault page</a></li>
+                        <li>Deposit (wrap) NEAR → wNEAR</li>
+                        <li>Return here and swap wNEAR → other tokens</li>
+                      </ol>
+                      <p className="text-xs text-orange-700 dark:text-orange-400">
+                        💡 Or select "wNEAR" from the dropdown below to swap wrapped tokens
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               {/* From Token */}
               <div className="relative z-20">
                 <div className="p-4 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/50 rounded-xl border-2 border-[#e2e8f0] dark:border-slate-700">

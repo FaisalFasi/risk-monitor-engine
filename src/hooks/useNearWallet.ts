@@ -26,6 +26,7 @@ export interface NearWalletActions {
   signOut: () => Promise<void>;
   signMessage: (message: string) => Promise<string | null>;
   executeTransaction: (transaction: any) => Promise<any>;
+  refreshBalance: () => Promise<void>;
 }
 
 export function useNearWallet(): NearWalletState & NearWalletActions {
@@ -421,6 +422,51 @@ export function useNearWallet(): NearWalletState & NearWalletActions {
     }
   }, [account]);
 
+  const refreshBalance = useCallback(async (): Promise<void> => {
+    // Get current account from state
+    const currentAccount = selectorRef.current?.store?.getState()?.accounts[0];
+    
+    if (!currentAccount || !currentAccount.accountId) {
+      console.log('⚠️ No account connected, cannot refresh balance');
+      return;
+    }
+
+    try {
+      console.log('🔄 Refreshing balance for:', currentAccount.accountId);
+      
+      // Get fresh balance from blockchain
+      const [newBalance, tokens] = await Promise.all([
+        getAccountBalance(currentAccount.accountId),
+        getAccountTokens(currentAccount.accountId)
+      ]);
+      
+      console.log('✅ Updated balance from blockchain:', newBalance, 'NEAR');
+      console.log('✅ Updated tokens:', tokens);
+      
+      // Update account state with fresh data
+      setAccount(prev => {
+        if (!prev) return null;
+        
+        const updated = {
+          ...prev,
+          balance: newBalance,
+          tokens: tokens || prev.tokens,
+        };
+        
+        console.log('📊 Account state updated:', updated);
+        
+        // Also update localStorage
+        localStorage.setItem('near-wallet-account', JSON.stringify(updated));
+        
+        return updated;
+      });
+      
+    } catch (err) {
+      console.error('❌ Error refreshing balance:', err);
+      // Don't throw - just log the error
+    }
+  }, []); // No dependencies to avoid stale closure
+
   return {
     account,
     isLoading,
@@ -434,5 +480,6 @@ export function useNearWallet(): NearWalletState & NearWalletActions {
     signOut,
     signMessage,
     executeTransaction,
+    refreshBalance,
   };
 }

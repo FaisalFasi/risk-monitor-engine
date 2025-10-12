@@ -107,48 +107,48 @@ export class NearSwapService {
         estimate: estimate.quote.amountOut,
       });
 
-      // For testnet demo swaps, we'll use a simple NEAR transfer to simulate
-      // In production, this would call Ref Finance contract
-      const actions = [];
-
+      // Check if trying to swap native NEAR
       if (fromToken.isNative && fromToken.symbol === 'NEAR') {
-        // For NEAR swaps, we can do a simple transfer to demonstrate
-        // In real implementation, this would interact with Ref Finance
-        actions.push({
-          type: 'Transfer',
-          params: {
-            deposit: parseTokenAmount('0.01', 24), // Small test amount
-          },
-        });
-      } else {
-        // For token swaps, prepare function call
-        actions.push({
-          type: 'FunctionCall',
-          params: {
-            methodName: 'ft_transfer_call',
-            args: {
-              receiver_id: this.refFinanceContract,
-              amount: parseTokenAmount(amountIn, fromToken.decimals),
-              msg: JSON.stringify({
-                force: 0,
-                actions: [{
-                  pool_id: this.getPoolId(fromToken, toToken),
-                  token_in: fromToken.contractId,
-                  token_out: toToken.contractId,
-                  min_amount_out: parseTokenAmount(estimate.minimumReceived, toToken.decimals),
-                }]
-              }),
-            },
-            gas: '180000000000000', // 180 TGas
-            deposit: '1', // 1 yoctoNEAR
-          },
-        });
+        throw new Error(
+          '⚠️ Direct NEAR swaps not supported yet.\n\n' +
+          'To swap NEAR:\n' +
+          '1. Go to Vault (/near-intents/vault)\n' +
+          '2. Wrap your NEAR → wNEAR\n' +
+          '3. Come back and swap wNEAR → other tokens\n\n' +
+          'Or use the Transfer feature to send NEAR directly.'
+        );
       }
 
-      // Return transaction in wallet selector format
+      // REAL swap for wrapped tokens using Ref Finance
+      const amountInParsed = parseTokenAmount(amountIn, fromToken.decimals);
+      const minAmountOut = parseTokenAmount(estimate.minimumReceived, toToken.decimals);
+
+      // Token → Token swap via Ref Finance
+      const actions = [{
+        type: 'FunctionCall',
+        params: {
+          methodName: 'ft_transfer_call',
+          args: {
+            receiver_id: this.refFinanceContract,
+            amount: amountInParsed,
+            msg: JSON.stringify({
+              force: 0,
+              actions: [{
+                pool_id: this.getPoolId(fromToken, toToken),
+                token_in: fromToken.contractId || fromToken.symbol,
+                token_out: toToken.contractId || toToken.symbol,
+                min_amount_out: minAmountOut,
+              }]
+            }),
+          },
+          gas: '180000000000000', // 180 TGas
+          deposit: '1', // 1 yoctoNEAR for security
+        },
+      }];
+      
       return {
         signerId: options.accountId,
-        receiverId: fromToken.isNative ? options.accountId : fromToken.contractId,
+        receiverId: fromToken.contractId || this.refFinanceContract,
         actions,
       };
       

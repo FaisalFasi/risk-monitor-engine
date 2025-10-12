@@ -120,7 +120,7 @@ export const MainDashboard: React.FC = () => {
   };
 
   // Handle opportunity actions
-  const handleDeposit = (opportunityId: number) => {
+  const handleDeposit = async (opportunityId: number, amount: string, tokenType: string) => {
     setSelectedOpportunity(opportunityId);
     setShowDepositModal(true);
   };

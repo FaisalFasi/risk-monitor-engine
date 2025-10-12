@@ -48,3 +48,6 @@ next-env.d.ts
 # documentation files (separate from README)
 NEAR_WALLET_CORS_FIX.md
 NEAR_WALLET_QUICK_START.md
+CLEAR_RATE_LIMIT.md
+NEAR_INTENTS_EXPLAINED.md
+VAULT_DEPLOYMENT.md
