@@ -1,0 +1,30 @@
+{
+  "name": "Bond.Credit - NEAR DeFi Platform",
+  "short_name": "Bond.Credit",
+  "description": "Enterprise-grade DeFi yield optimization on NEAR Protocol",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2c5bff",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo/bod.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo/bod.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "business"],
+  "dir": "ltr",
+  "lang": "en-US",
+  "scope": "/",
+  "screenshots": []
+}
+
