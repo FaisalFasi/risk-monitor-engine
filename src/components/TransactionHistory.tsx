@@ -131,23 +131,22 @@ export function TransactionHistory({
   }, [accountId, network, limit, offset, transactionService]);
 
   useEffect(() => {
-    // Check rate limit but DON'T block - Pikespeak API should work
+    // DON'T auto-load on mount to prevent spam requests
+    // Check rate limit status only
     const status = transactionService.isRateLimited();
     if (status.limited) {
-      console.log('⏰ NearBlocks rate limited, but trying Pikespeak API...');
+      console.log('⏰ Rate limited - waiting for user action');
       setRateLimitInfo({ minutesLeft: status.minutesLeft, resetTime: status.resetTime });
-      // Continue anyway - let Pikespeak try
     }
-
-    // Only load if accountId is valid
-    if (accountId && accountId !== 'undefined') {
-      loadTransactions();
-    } else {
+    
+    // Set loading to false - user must click "Load History" button
+    setLoading(false);
+    
+    if (!accountId || accountId === 'undefined') {
       console.warn('⚠️ TransactionHistory: Invalid accountId:', accountId);
-      setLoading(false);
       setError('Please connect your wallet to view transaction history');
     }
-  }, [accountId, network]);
+  }, [accountId, network, transactionService]);
 
   const handleLoadMore = () => {
     loadTransactions(true);
@@ -229,24 +228,29 @@ export function TransactionHistory({
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Button 
+            onClick={handleRefresh} 
+            disabled={loading || (rateLimitInfo !== null && rateLimitInfo.minutesLeft > 0)}
+            variant="default"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            {rateLimitInfo && rateLimitInfo.minutesLeft > 0 ? `Wait ${rateLimitInfo.minutesLeft}m` : transactions.length === 0 ? 'Load History' : 'Refresh'}
+          </Button>
+          <span className="text-xs text-slate-500 dark:text-slate-400">
+            {transactions.length === 0 ? '👆 Click to load' : '✅ Cached for 5 min'}
+          </span>
+        </div>
         <a
           href={`https://testnet.nearblocks.io/address/${accountId}`}
           target="_blank"
           rel="noopener noreferrer"
           className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
         >
-          View All on NearBlocks →
+          View on NearBlocks →
         </a>
-        <Button 
-          onClick={handleRefresh} 
-          disabled={loading || (rateLimitInfo !== null && rateLimitInfo.minutesLeft > 0)}
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          {rateLimitInfo && rateLimitInfo.minutesLeft > 0 ? `Wait ${rateLimitInfo.minutesLeft}m` : 'Refresh'}
-        </Button>
       </div>
       <div>
         {rateLimitInfo && rateLimitInfo.minutesLeft > 0 && (
@@ -300,53 +304,40 @@ export function TransactionHistory({
           </div>
         )}
 
-        {loading && transactions.length === 0 ? (
+        {loading ? (
           <div className="flex flex-col items-center justify-center py-12">
             <div className="w-8 h-8 border-4 border-t-transparent rounded-full animate-spin mb-4" style={{ borderColor: '#2c5bff', borderTopColor: 'transparent' }}></div>
-            <p className="text-sm" style={{ color: '#475569' }}>Loading transactions from Pikespeak API...</p>
+            <p className="text-sm" style={{ color: '#475569' }}>Loading transactions from blockchain indexer...</p>
+            <p className="text-xs text-slate-400 mt-2">This may take a few seconds</p>
           </div>
         ) : transactions.length === 0 ? (
           <div className="space-y-4">
-            {/* Main message with retry */}
-            <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-lg border-2 border-slate-200 dark:border-slate-700">
+            {/* Main message - Manual load required */}
+            <div className="p-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-2 border-blue-200 dark:border-blue-700">
               <div className="text-center space-y-4">
-                <div className="text-5xl mb-2">⏰</div>
+                <div className="text-5xl mb-2">📜</div>
                 <div>
                   <p className="font-semibold text-lg mb-2" style={{ color: '#0f172a' }}>
-                    Transaction History Temporarily Unavailable
+                    Transaction History Not Loaded
                   </p>
                   <p className="text-sm mb-4" style={{ color: '#64748b' }}>
-                    The transaction indexer API is rate limited. Your transactions are safe on the blockchain.
+                    Click the "Load History" button above to fetch your transactions from the blockchain.
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-500">
+                    💡 We don't auto-load to prevent API rate limits
                   </p>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-                  <button
-                    onClick={() => {
-                      localStorage.removeItem('nearblocks_rate_limit');
-                      window.location.reload();
-                    }}
-                    className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm hover:shadow-md flex items-center gap-2"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                    Retry Loading History
-                  </button>
-                  
-                  <span className="text-sm text-slate-400">or</span>
-                  
+                <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mt-6">
                   <a
                     href={`https://testnet.nearblocks.io/address/${accountId}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-6 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors font-medium flex items-center gap-2"
+                    className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm hover:shadow-md"
                   >
-                    View on Explorer →
+                    View All on NearBlocks →
                   </a>
                 </div>
-                
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-4">
-                  💡 NearBlocks explorer always works and shows all your transactions
-                </p>
               </div>
             </div>
           </div>

@@ -27,7 +27,7 @@ export class NearTransactionHistory {
   private rpcUrl: string;
   private pagodaApiUrl: string;
   private cache: Map<string, { data: TransactionHistoryResponse; timestamp: number }>;
-  private readonly CACHE_DURATION = 60000; // 1 minute cache (increased for better UX)
+  private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minute cache to reduce API calls
   private rateLimitUntil: number = 0; // Timestamp when rate limit will be lifted
   private readonly RATE_LIMIT_DURATION = 15 * 60 * 1000; // 15 minutes
 
