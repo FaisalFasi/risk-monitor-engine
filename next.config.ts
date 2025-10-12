@@ -1,28 +1,18 @@
 import type { NextConfig } from "next";
 
-const isGithubActions = process.env.GITHUB_ACTIONS === 'true';
-const isNetlify = process.env.NETLIFY === 'true';
-
-// For Netlify, we don't need basePath
-const basePath = isNetlify ? '' : (isGithubActions ? '/risk-monitor-engine' : '');
-const assetPrefix = isNetlify ? '' : (isGithubActions ? '/risk-monitor-engine' : '');
-
+/** 
+ * Minimal Next.js Configuration for Vercel, Netlify & Render
+ * No basePath or assetPrefix - works perfectly on all platforms
+ */
 const nextConfig: NextConfig = {
-  // Core settings
   reactStrictMode: true,
-  basePath: basePath,
-  assetPrefix: assetPrefix,
-  trailingSlash: true,
   
-  // Image optimization
+  // Output mode for Docker/Render deployments
+  output: 'standalone',
+  
+  // Image optimization - let platform handle it
   images: {
-    unoptimized: true,
-    domains: [],
-  },
-  
-  // Environment variables
-  env: {
-    NEXT_PUBLIC_BASE_PATH: isGithubActions ? '/risk-monitor-engine' : '',
+    unoptimized: false,
   },
   
   // Build optimizations
@@ -34,12 +24,7 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   
-  // Compiler options
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
-  },
-  
-  // Webpack configuration
+  // Webpack configuration for NEAR libraries
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
@@ -52,7 +37,7 @@ const nextConfig: NextConfig = {
     return config;
   },
   
-  // Add headers for CORS support
+  // CORS headers for API routes
   async headers() {
     return [
       {
@@ -66,9 +51,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  
-  // Disable X-Powered-By header
-  poweredByHeader: false
 };
 
 export default nextConfig;

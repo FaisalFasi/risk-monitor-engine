@@ -265,9 +265,17 @@ export function useNearWallet(): NearWalletState & NearWalletActions {
       modal.show();
       console.log('Wallet selector modal opened');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to connect wallet';
+      let errorMessage = err instanceof Error ? err.message : 'Failed to connect wallet';
+      
+      // Check if it's an insufficient balance error
+      if (errorMessage.includes('does not have enough balance') || errorMessage.includes('balance 0')) {
+        errorMessage = 'Insufficient testnet NEAR balance. Get free testnet tokens at: https://near-faucet.io/';
+        console.error('Insufficient balance error:', err);
+      } else {
+        console.error('Wallet connection error:', err);
+      }
+      
       setError(errorMessage);
-      console.error('Wallet connection error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -383,6 +391,13 @@ export function useNearWallet(): NearWalletState & NearWalletActions {
       
     } catch (err) {
       console.error('Error executing transaction:', err);
+      
+      // Provide helpful error message for insufficient balance
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      if (errorMessage.includes('does not have enough balance') || errorMessage.includes('balance 0')) {
+        throw new Error('Insufficient testnet NEAR balance. Get free tokens at: https://near-faucet.io/');
+      }
+      
       throw err;
     }
   }, [account]);
