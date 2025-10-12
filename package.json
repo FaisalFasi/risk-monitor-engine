@@ -27,6 +27,7 @@
     "@near-js/providers": "^2.2.6",
     "@near-js/signers": "^2.2.6",
     "@near-js/utils": "^2.2.6",
+    "@near-wallet-selector/bitte-wallet": "^8.10.2",
     "@near-wallet-selector/core": "^8.10.2",
     "@near-wallet-selector/ledger": "^8.10.2",
     "@near-wallet-selector/meteor-wallet": "^8.10.2",
