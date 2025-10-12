@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/Badge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { useRealTimeData } from '@/hooks/useRealTimeData';
+import { Download, Upload, RefreshCw, Wallet, TrendingUp, BarChart3, Activity } from 'lucide-react';
 
 interface ActivityItem {
   id: string;
@@ -22,12 +23,12 @@ export const RealTimeActivityFeed: React.FC = () => {
 
   const getActivityIcon = (type: string) => {
     switch (type) {
-      case 'deposit': return '📥';
-      case 'withdraw': return '📤';
-      case 'allocate': return '🔄';
-      case 'yield_claim': return '💰';
-      case 'price_update': return '📈';
-      default: return '📊';
+      case 'deposit': return <Download className="w-4 h-4" />;
+      case 'withdraw': return <Upload className="w-4 h-4" />;
+      case 'allocate': return <RefreshCw className="w-4 h-4" />;
+      case 'yield_claim': return <Wallet className="w-4 h-4" />;
+      case 'price_update': return <TrendingUp className="w-4 h-4" />;
+      default: return <BarChart3 className="w-4 h-4" />;
     }
   };
 
@@ -195,7 +196,7 @@ export const RealTimeActivityFeed: React.FC = () => {
             ))
           ) : (
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-              <div className="text-4xl mb-2">📊</div>
+              <Activity className="w-16 h-16 mx-auto mb-2 text-slate-400" />
               <p>No activity to show</p>
               <p className="text-sm">Activity will appear here in real-time</p>
             </div>

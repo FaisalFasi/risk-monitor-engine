@@ -13,6 +13,13 @@ const nextConfig: NextConfig = {
   // Image optimization - let platform handle it
   images: {
     unoptimized: false,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'assets.coingecko.com',
+        pathname: '/coins/images/**',
+      },
+    ],
   },
   
   // Build optimizations

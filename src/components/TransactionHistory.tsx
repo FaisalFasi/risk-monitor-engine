@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Transaction } from '@/types/tokens';
 import { NearTransactionHistory } from '@/services/near-transaction-history';
+import { RefreshCw } from 'lucide-react';
 
 interface TransactionHistoryProps {
   accountId: string;
@@ -145,8 +146,10 @@ export function TransactionHistory({
             disabled={loading}
             variant="outline"
             size="sm"
+            className="flex items-center gap-2"
           >
-            {loading ? '🔄' : '↻'} Refresh
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
           </Button>
         </div>
       </CardHeader>

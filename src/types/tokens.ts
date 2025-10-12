@@ -5,7 +5,8 @@ export interface Token {
   symbol: string;
   name: string;
   decimals: number;
-  icon: string;
+  icon: string; // Icon identifier for rendering
+  iconUrl?: string; // CoinGecko CDN URL for token logo
   contractId: string; // NEAR contract address
   isNative?: boolean;
 }
@@ -64,7 +65,8 @@ export const NEAR_TOKENS: Record<string, Token> = {
     symbol: 'NEAR',
     name: 'NEAR Protocol',
     decimals: 24,
-    icon: '⬇️',
+    icon: 'near',
+    iconUrl: 'https://assets.coingecko.com/coins/images/10365/small/near.jpg',
     contractId: 'near',
     isNative: true,
   },
@@ -73,7 +75,8 @@ export const NEAR_TOKENS: Record<string, Token> = {
     symbol: 'wNEAR',
     name: 'Wrapped NEAR',
     decimals: 24,
-    icon: '🔄',
+    icon: 'wnear',
+    iconUrl: 'https://assets.coingecko.com/coins/images/10365/small/near.jpg',
     contractId: 'wrap.testnet', // testnet
   },
   USDC: {
@@ -81,7 +84,8 @@ export const NEAR_TOKENS: Record<string, Token> = {
     symbol: 'USDC',
     name: 'USD Coin',
     decimals: 6,
-    icon: '💵',
+    icon: 'usdc',
+    iconUrl: 'https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png',
     contractId: 'usdc.fakes.testnet', // testnet
   },
   USDT: {
@@ -89,7 +93,8 @@ export const NEAR_TOKENS: Record<string, Token> = {
     symbol: 'USDT',
     name: 'Tether USD',
     decimals: 6,
-    icon: '💲',
+    icon: 'usdt',
+    iconUrl: 'https://assets.coingecko.com/coins/images/325/small/Tether.png',
     contractId: 'usdt.fakes.testnet', // testnet
   },
   DAI: {
@@ -97,7 +102,8 @@ export const NEAR_TOKENS: Record<string, Token> = {
     symbol: 'DAI',
     name: 'Dai Stablecoin',
     decimals: 18,
-    icon: '💰',
+    icon: 'dai',
+    iconUrl: 'https://assets.coingecko.com/coins/images/9956/small/Badge_Dai.png',
     contractId: 'dai.fakes.testnet', // testnet
   },
   WETH: {
@@ -105,7 +111,8 @@ export const NEAR_TOKENS: Record<string, Token> = {
     symbol: 'WETH',
     name: 'Wrapped Ethereum',
     decimals: 18,
-    icon: '💎',
+    icon: 'weth',
+    iconUrl: 'https://assets.coingecko.com/coins/images/2518/small/weth.png',
     contractId: 'weth.fakes.testnet', // testnet
   },
   WBTC: {
@@ -113,7 +120,8 @@ export const NEAR_TOKENS: Record<string, Token> = {
     symbol: 'WBTC',
     name: 'Wrapped Bitcoin',
     decimals: 8,
-    icon: '₿',
+    icon: 'wbtc',
+    iconUrl: 'https://assets.coingecko.com/coins/images/7598/small/wrapped_bitcoin_wbtc.png',
     contractId: 'wbtc.fakes.testnet', // testnet
   },
 };

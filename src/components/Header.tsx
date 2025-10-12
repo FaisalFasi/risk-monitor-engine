@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useResponsive } from '@/hooks/useResponsive';
 import { useNearWallet } from '@/hooks/useNearWallet';
+import { Moon, Sun, Menu, X, Wallet } from 'lucide-react';
 
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -133,17 +134,19 @@ export function Header() {
           {/* Right Side Actions */}
           <div className="flex items-center space-x-2 sm:space-x-3">
             {/* Dark Mode Toggle */}
-            <button
+            {/* <button
               onClick={toggleDarkMode}
-              className={`rounded-lg bg-[#F1F5F9] dark:bg-slate-800 text-[#475569] dark:text-slate-300 hover:bg-[#E2E8F0] dark:hover:bg-slate-700 transition-all duration-200 hover-scale focus:ring-2 focus:ring-[#4F46E5] focus:ring-offset-2 ${
+              className={`rounded-lg bg-[#F1F5F9] dark:bg-slate-800 text-[#475569] dark:text-slate-300 hover:bg-[#E2E8F0] dark:hover:bg-slate-700 transition-all duration-200 hover-scale focus:ring-2 focus:ring-[#4F46E5] focus:ring-offset-2 flex items-center justify-center ${
                 isMobile ? 'p-1.5' : 'p-2'
               }`}
               aria-label="Toggle dark mode"
             >
-              <span className={`${isMobile ? 'text-sm' : 'text-base'}`}>
-                {isDarkMode ? '☀️' : '🌙'}
-              </span>
-            </button>
+              {isDarkMode ? (
+                <Sun className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} text-yellow-400`} />
+              ) : (
+                <Moon className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} text-slate-600 dark:text-slate-300`} />
+              )}
+            </button> */}
 
             {/* Connect Wallet Button - Desktop */}
             {!isConnected ? (
@@ -165,12 +168,12 @@ export function Header() {
                     {account?.accountId?.slice(0, 8)}...
                   </span>
                 </div>
-                <button 
+                {/* <button 
                   onClick={handleDisconnectWallet}
                   className="px-3 py-2 text-[#475569] dark:text-slate-300 hover:text-[#1E293B] dark:hover:text-slate-100 text-sm font-medium transition-colors rounded-lg hover:bg-[#F8F9FA]"
                 >
                   Disconnect
-                </button>
+                </button> */}
               </div>
             )}
 

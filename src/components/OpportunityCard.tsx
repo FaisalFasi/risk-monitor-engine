@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -6,6 +8,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { TrustScoreDisplay } from '@/components/TrustScoreDisplay';
 import { TransactionForm } from '@/components/TransactionForm';
 import { scoringService, OpportunityScore } from '@/services/scoring-service';
+import { Star, Check, AlertTriangle, Lock, Wallet, Droplet, Landmark, BarChart3, Download, Upload, RefreshCw } from 'lucide-react';
 
 interface Opportunity {
   id: number;
@@ -50,18 +53,18 @@ export function OpportunityCard({ opportunity, isConnected, onDeposit, onAllocat
   }, [opportunity]);
     
   const getScoreBadge = (score: number) => {
-    if (score >= 80) return <Badge variant="default" className="bg-green-500 text-white">⭐ Preferred ({score})</Badge>;
-    if (score >= 50) return <Badge variant="default" className="bg-yellow-500 text-white">✅ Moderate ({score})</Badge>;
-    return <Badge variant="destructive">🚨 Caution ({score})</Badge>;
+    if (score >= 80) return <Badge variant="default" className="bg-green-500 text-white flex items-center gap-1"><Star className="w-3 h-3" /> Preferred ({score})</Badge>;
+    if (score >= 50) return <Badge variant="default" className="bg-yellow-500 text-white flex items-center gap-1"><Check className="w-3 h-3" /> Moderate ({score})</Badge>;
+    return <Badge variant="destructive" className="flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Caution ({score})</Badge>;
   };
 
   const getCategoryIcon = (category: string) => {
     switch (category?.toLowerCase()) {
-      case 'staking': return '🔒';
-      case 'lending': return '💰';
-      case 'liquidity': return '💧';
-      case 'defi': return '🏛️';
-      default: return '📊';
+      case 'staking': return <Lock className="w-6 h-6 text-slate-600 dark:text-slate-400" />;
+      case 'lending': return <Wallet className="w-6 h-6 text-slate-600 dark:text-slate-400" />;
+      case 'liquidity': return <Droplet className="w-6 h-6 text-slate-600 dark:text-slate-400" />;
+      case 'defi': return <Landmark className="w-6 h-6 text-slate-600 dark:text-slate-400" />;
+      default: return <BarChart3 className="w-6 h-6 text-slate-600 dark:text-slate-400" />;
     }
   };
 
@@ -75,11 +78,11 @@ export function OpportunityCard({ opportunity, isConnected, onDeposit, onAllocat
   };
 
   return (
-    <Card className="w-full max-w-sm bg-white dark:bg-slate-800 shadow-sm rounded-xl overflow-hidden hover:shadow-md transition-all duration-200 border border-[#f1f5f9] dark:border-slate-700">
+    <Card className="w-full max-w-sm bg-white dark:bg-slate-800 shadow-sm rounded-xl overflow-hidden hover:shadow-md transition-all duration-200 border border-[#f1f5f9] dark:border-slate-700 flex flex-col">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">{getCategoryIcon(opportunity.category || '')}</span>
+            {getCategoryIcon(opportunity.category || '')}
             <CardTitle className="text-xl font-bold tracking-tight" style={{ color: '#0f172a' }}>
               {opportunity.name}
             </CardTitle>
@@ -95,7 +98,7 @@ export function OpportunityCard({ opportunity, isConnected, onDeposit, onAllocat
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold" style={{ color: '#64748b' }}>APY:</span>
           <span className="text-lg font-bold text-[#10B981] dark:text-green-400">
-            {opportunity.apy.toFixed(1)}%
+            {(opportunity.apy || 0).toFixed(1)}%
           </span>
         </div>
         
@@ -171,7 +174,7 @@ export function OpportunityCard({ opportunity, isConnected, onDeposit, onAllocat
         )}
       </CardContent>
       
-      <CardFooter className="pt-4">
+      <CardFooter className="pt-4 mt-auto">
         {isConnected ? (
           <div className="space-y-2 w-full">
             {showForm ? (
@@ -201,39 +204,44 @@ export function OpportunityCard({ opportunity, isConnected, onDeposit, onAllocat
               <div className="space-y-2">
                 <Button 
                   onClick={() => setShowForm('deposit')}
-                  className="w-full text-white font-semibold shadow-sm hover:shadow-md transition-all duration-200 hover:opacity-90"
+                  className="w-full text-white font-semibold shadow-sm hover:shadow-md transition-all duration-200 hover:opacity-90 flex items-center justify-center gap-2"
                   style={{ backgroundColor: '#2c5bff' }}
                   disabled={opportunity.status !== 'active'}
                 >
-                  📥 Deposit
+                  <Download className="w-4 h-4" />
+                  Deposit
                 </Button>
                 <div className="grid grid-cols-2 gap-2">
                   <Button 
                     onClick={() => setShowForm('allocate')}
-                    className="w-full text-white font-semibold shadow-sm hover:shadow-md transition-all duration-200 hover:opacity-90"
+                    className="w-full text-white font-semibold shadow-sm hover:shadow-md transition-all duration-200 hover:opacity-90 flex items-center justify-center gap-2"
                     style={{ backgroundColor: '#2c5bff' }}
                     disabled={opportunity.status !== 'active'}
                   >
-                    🔄 Allocate
+                    <RefreshCw className="w-4 h-4" />
+                    Allocate
                   </Button>
                   <Button 
                     onClick={() => setShowForm('withdraw')}
-                    className="w-full bg-[#EF4444] hover:bg-[#DC2626] text-white font-semibold shadow-sm hover:shadow-md transition-all duration-200"
+                    className="w-full bg-[#EF4444] hover:bg-[#DC2626] text-white font-semibold shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center gap-2"
                     disabled={opportunity.status !== 'active'}
                   >
-                    📤 Withdraw
+                    <Upload className="w-4 h-4" />
+                    Withdraw
                   </Button>
                 </div>
               </div>
             )}
           </div>
         ) : (
-          <Button 
-            className="w-full bg-[#e2e8f0] dark:bg-gray-600 text-[#64748b] dark:text-white font-semibold cursor-not-allowed" 
+          <button 
+            className="w-full text-white font-semibold shadow-sm transition-all duration-200 flex items-center justify-center gap-2 px-4 py-2 rounded-lg cursor-not-allowed" 
+            style={{ backgroundColor: '#2c5bff', color: '#ffffff' }}
             disabled
           >
+            <Wallet className="w-4 h-4" style={{ color: '#ffffff' }} />
             Connect Wallet to Interact
-          </Button>
+          </button>
         )}
       </CardFooter>
     </Card>

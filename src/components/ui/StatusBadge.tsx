@@ -1,5 +1,6 @@
 import React from 'react';
 import { Badge } from './Badge';
+import { CheckCircle2, XCircle, AlertTriangle, Info, Clock } from 'lucide-react';
 
 interface StatusBadgeProps {
   status: 'success' | 'error' | 'warning' | 'info' | 'pending';
@@ -15,31 +16,32 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
   const statusConfig = {
     success: {
       className: 'bg-green-500 text-white',
-      icon: '✅'
+      icon: CheckCircle2
     },
     error: {
       className: 'bg-red-500 text-white',
-      icon: '❌'
+      icon: XCircle
     },
     warning: {
       className: 'bg-yellow-500 text-white',
-      icon: '⚠️'
+      icon: AlertTriangle
     },
     info: {
       className: 'bg-blue-500 text-white',
-      icon: 'ℹ️'
+      icon: Info
     },
     pending: {
       className: 'bg-gray-500 text-white',
-      icon: '⏳'
+      icon: Clock
     }
   };
 
   const config = statusConfig[status];
+  const Icon = config.icon;
 
   return (
-    <Badge className={`${config.className} ${className}`}>
-      <span className="mr-1">{config.icon}</span>
+    <Badge className={`${config.className} ${className} flex items-center gap-1`}>
+      <Icon className="w-3 h-3" />
       {text}
     </Badge>
   );

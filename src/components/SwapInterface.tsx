@@ -7,6 +7,7 @@ import { TokenSelector } from '@/components/TokenSelector';
 import { Token, NEAR_TOKENS, SwapTransaction, getExplorerUrl } from '@/types/tokens';
 import { NearSwapService } from '@/services/near-swap';
 import { priceService } from '@/services/price-service';
+import { Link, CheckCircle2, XCircle } from 'lucide-react';
 
 interface SwapResult {
   success: boolean;
@@ -234,7 +235,7 @@ export function SwapInterface() {
         <div className="p-4 md:p-6 relative">
           {!isConnected ? (
             <div className="text-center py-12">
-              <div className="text-5xl md:text-6xl mb-4">🔗</div>
+              <Link className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 text-slate-400" />
               <h3 className="text-lg md:text-xl font-semibold mb-2" style={{ color: '#0f172a' }}>
                 Connect Your Wallet
               </h3>
@@ -421,7 +422,11 @@ export function SwapInterface() {
                 }`}>
                   <div className="flex items-start space-x-3">
                     <div className="text-3xl">
-                      {swapResult.success ? '✅' : '❌'}
+                      {swapResult.success ? (
+                        <CheckCircle2 className="w-8 h-8 text-green-500" />
+                      ) : (
+                        <XCircle className="w-8 h-8 text-red-500" />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-bold text-slate-900 dark:text-slate-100 mb-1">

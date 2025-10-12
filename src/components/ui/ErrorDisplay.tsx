@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './Card';
 import { Button } from './Button';
 import { StatusBadge } from './StatusBadge';
+import { XCircle, AlertTriangle, Info, RefreshCw, X } from 'lucide-react';
 
 export interface ErrorDisplayProps {
   title: string;
@@ -26,10 +27,10 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
 }) => {
   const getErrorIcon = () => {
     switch (type) {
-      case 'error': return '❌';
-      case 'warning': return '⚠️';
-      case 'info': return 'ℹ️';
-      default: return '❌';
+      case 'error': return XCircle;
+      case 'warning': return AlertTriangle;
+      case 'info': return Info;
+      default: return XCircle;
     }
   };
 
@@ -60,11 +61,13 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
     }
   };
 
+  const Icon = getErrorIcon();
+  
   return (
     <Card className={`${getErrorColor()} ${className}`}>
       <CardHeader>
         <CardTitle className={`flex items-center gap-2 ${getTextColor()}`}>
-          <span className="text-xl">{getErrorIcon()}</span>
+          <Icon className="w-5 h-5" />
           {title}
           {getStatusBadge()}
         </CardTitle>
@@ -85,13 +88,15 @@ export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
         
         <div className="flex gap-2">
           {onRetry && (
-            <Button onClick={onRetry} variant="outline" size="sm">
-              🔄 Retry
+            <Button onClick={onRetry} variant="outline" size="sm" className="flex items-center gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Retry
             </Button>
           )}
           {onDismiss && (
-            <Button onClick={onDismiss} variant="outline" size="sm">
-              ✕ Dismiss
+            <Button onClick={onDismiss} variant="outline" size="sm" className="flex items-center gap-2">
+              <X className="w-4 h-4" />
+              Dismiss
             </Button>
           )}
         </div>

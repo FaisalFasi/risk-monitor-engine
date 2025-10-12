@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import { Token, NEAR_TOKENS } from '@/types/tokens';
+import { Circle, RefreshCw, DollarSign, Coins, Gem, Bitcoin } from 'lucide-react';
 
 interface TokenSelectorProps {
   selectedToken: Token;
@@ -10,6 +12,56 @@ interface TokenSelectorProps {
   disabled?: boolean;
   excludeTokens?: string[]; // Token IDs to exclude
   compact?: boolean;
+}
+
+// Token Icon Component with fallback
+function TokenIcon({ token, size = 'md' }: { token: Token; size?: 'sm' | 'md' | 'lg' }) {
+  const [imageError, setImageError] = useState(false);
+  
+  const sizeClasses = {
+    sm: { container: 'w-6 h-6', icon: 'w-6 h-6', badge: 'w-2 h-2', badgeIcon: 'w-1.5 h-1.5' },
+    md: { container: 'w-8 h-8', icon: 'w-8 h-8', badge: 'w-3 h-3', badgeIcon: 'w-2 h-2' },
+    lg: { container: 'w-12 h-12', icon: 'w-12 h-12', badge: 'w-4 h-4', badgeIcon: 'w-2.5 h-2.5' }
+  };
+  
+  const sizes = sizeClasses[size];
+  
+  const getFallbackIcon = (icon: string) => {
+    const iconProps = { className: sizes.icon, strokeWidth: 2 };
+    switch(icon) {
+      case 'near': return <Circle {...iconProps} className={`${sizes.icon} text-blue-500`} />;
+      case 'wnear': return <RefreshCw {...iconProps} className={`${sizes.icon} text-purple-500`} />;
+      case 'usdc': return <DollarSign {...iconProps} className={`${sizes.icon} text-blue-600`} />;
+      case 'usdt': return <DollarSign {...iconProps} className={`${sizes.icon} text-green-600`} />;
+      case 'dai': return <Coins {...iconProps} className={`${sizes.icon} text-yellow-500`} />;
+      case 'weth': return <Gem {...iconProps} className={`${sizes.icon} text-indigo-500`} />;
+      case 'wbtc': return <Bitcoin {...iconProps} className={`${sizes.icon} text-orange-500`} />;
+      default: return <Coins {...iconProps} />;
+    }
+  };
+
+  if (token.iconUrl && !imageError) {
+    return (
+      <div className={`relative ${sizes.container} flex-shrink-0`}>
+        <Image
+          src={token.iconUrl}
+          alt={token.name}
+          width={size === 'sm' ? 24 : size === 'md' ? 32 : 48}
+          height={size === 'sm' ? 24 : size === 'md' ? 32 : 48}
+          className="rounded-full"
+          onError={() => setImageError(true)}
+          unoptimized
+        />
+        {token.symbol === 'wNEAR' && (
+          <div className={`absolute -bottom-0.5 -right-0.5 ${sizes.badge} bg-purple-500 rounded-full flex items-center justify-center`}>
+            <RefreshCw className={`${sizes.badgeIcon} text-white`} strokeWidth={3} />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return <div className="flex-shrink-0">{getFallbackIcon(token.icon)}</div>;
 }
 
 export function TokenSelector({ 
@@ -56,7 +108,7 @@ export function TokenSelector({
           disabled={disabled}
           className="flex items-center space-x-2 px-3 py-2.5 bg-white dark:bg-slate-800 border border-[#e2e8f0] dark:border-slate-600 hover:border-[#2c5bff] dark:hover:border-blue-500 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
         >
-          <span className="text-2xl">{selectedToken.icon}</span>
+          <TokenIcon token={selectedToken} size="sm" />
           <span className="font-semibold" style={{ color: '#0f172a' }}>
             {selectedToken.symbol}
           </span>
@@ -87,7 +139,7 @@ export function TokenSelector({
                     selectedToken.id === token.id ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-[#f8fafc] dark:hover:bg-blue-900/20'
                   }`}
                 >
-                  <span className="text-3xl">{token.icon}</span>
+                  <TokenIcon token={token} size="md" />
                   <div className="flex-1 text-left">
                     <div className="font-semibold" style={{ color: '#0f172a' }}>
                       {token.symbol}
@@ -128,7 +180,7 @@ export function TokenSelector({
         className="w-full flex items-center justify-between px-4 py-3.5 bg-white dark:bg-slate-800 border-2 border-[#e2e8f0] dark:border-slate-600 rounded-xl hover:border-[#2c5bff] dark:hover:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
       >
         <div className="flex items-center space-x-3">
-          <span className="text-3xl">{selectedToken.icon}</span>
+          <TokenIcon token={selectedToken} size="lg" />
           <div className="text-left">
             <div className="font-semibold text-lg" style={{ color: '#0f172a' }}>
               {selectedToken.symbol}
@@ -167,7 +219,7 @@ export function TokenSelector({
                   selectedToken.id === token.id ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-[#f8fafc] dark:hover:bg-blue-900/20'
                 }`}
               >
-                <span className="text-3xl flex-shrink-0">{token.icon}</span>
+                <TokenIcon token={token} size="lg" />
                 <div className="flex-1 text-left min-w-0">
                   <div className="font-semibold" style={{ color: '#0f172a' }}>
                     {token.symbol}

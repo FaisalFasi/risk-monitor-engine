@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { useRealTimeData } from '@/hooks/useRealTimeData';
+import { TrendingUp, TrendingDown, ArrowRight, LineChart } from 'lucide-react';
 
 interface PriceData {
   token: string;
@@ -85,16 +86,17 @@ export const RealTimePriceTicker: React.FC = () => {
   };
 
   const getChangeIcon = (change: number) => {
-    if (change > 0) return '↗️';
-    if (change < 0) return '↘️';
-    return '→';
+    if (change > 0) return <TrendingUp className="w-4 h-4 text-green-500" />;
+    if (change < 0) return <TrendingDown className="w-4 h-4 text-red-500" />;
+    return <ArrowRight className="w-4 h-4 text-gray-500" />;
   };
 
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          📈 Real-Time Prices
+          <LineChart className="w-5 h-5" />
+          Real-Time Prices
           {isConnected ? (
             <StatusBadge status="success" text="Live" />
           ) : (
