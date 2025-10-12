@@ -2,6 +2,7 @@ import { setupWalletSelector } from '@near-wallet-selector/core';
 import { setupModal } from '@near-wallet-selector/modal-ui';
 import { setupLedger } from '@near-wallet-selector/ledger';
 import { setupMeteorWallet } from '@near-wallet-selector/meteor-wallet';
+import { setupMyNearWallet } from '@near-wallet-selector/my-near-wallet';
 import { setupSender } from '@near-wallet-selector/sender';
 
 // Import modal CSS
@@ -88,13 +89,8 @@ export async function createWalletSelector(config?: WalletSelectorConfig) {
       },
       debug: process.env.NODE_ENV === 'development',
       modules: [
-        setupMeteorWallet({
-          walletUrl: finalConfig.walletUrl,
-          iconUrl: 'https://wallet.meteorwallet.app/favicon.ico',
-        }),
-        // Temporarily disable Sender and Ledger to avoid compatibility issues
-        // setupSender(),
-        // setupLedger(),
+        setupMyNearWallet(),
+        setupMeteorWallet(),
       ],
     });
 
