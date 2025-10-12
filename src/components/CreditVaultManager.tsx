@@ -382,7 +382,8 @@ export function CreditVaultManager({ agents, onVaultCreated, onClose }: CreditVa
               <button
                 type="button"
                 onClick={() => setCurrentStep(currentStep - 1)}
-                className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-600 transition-all duration-200 flex items-center space-x-2"
+                className="px-6 py-3 border border-[#e2e8f0] rounded-xl hover:bg-[#f8fafc] transition-all duration-200 flex items-center space-x-2"
+                style={{ color: '#0f172a' }}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -394,7 +395,8 @@ export function CreditVaultManager({ agents, onVaultCreated, onClose }: CreditVa
             <button
               type="button"
               onClick={() => onClose?.()}
-              className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-600 transition-all duration-200"
+              className="px-6 py-3 border border-[#e2e8f0] rounded-xl hover:bg-[#f8fafc] transition-all duration-200"
+              style={{ color: '#0f172a' }}
             >
               Cancel
             </button>
@@ -403,7 +405,8 @@ export function CreditVaultManager({ agents, onVaultCreated, onClose }: CreditVa
               <button
                 type="button"
                 onClick={() => setCurrentStep(currentStep + 1)}
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-2"
+                className="px-6 py-3 text-white rounded-xl transition-all duration-200 shadow-md hover:shadow-lg hover:opacity-90 flex items-center space-x-2"
+                style={{ backgroundColor: '#2c5bff' }}
               >
                 <span>Next</span>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -415,7 +418,8 @@ export function CreditVaultManager({ agents, onVaultCreated, onClose }: CreditVa
                 type="submit"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl disabled:hover:scale-100 flex items-center space-x-2"
+                className="px-6 py-3 text-white rounded-xl transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                style={{ backgroundColor: isSubmitting ? '#94a3b8' : '#10B981' }}
               >
                 {isSubmitting ? (
                   <>
@@ -441,31 +445,31 @@ export function CreditVaultManager({ agents, onVaultCreated, onClose }: CreditVa
             {currentStep === 3 && (
               <div className="space-y-6 animate-fade-in">
                 <div className="text-center mb-6">
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Review & Confirm</h3>
-                  <p className="text-gray-600 dark:text-gray-400">Review all details before creating the vault</p>
+                  <h3 className="text-lg font-medium mb-2" style={{ color: '#0f172a' }}>Review & Confirm</h3>
+                  <p style={{ color: '#64748b' }}>Review all details before creating the vault</p>
                 </div>
 
-                <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-slate-700 dark:to-slate-700 rounded-xl p-6">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-4">Vault Summary</h4>
+                <div className="bg-[#f8fafc] dark:from-slate-700 dark:to-slate-700 rounded-xl p-6 border border-[#e2e8f0]">
+                  <h4 className="font-semibold mb-4" style={{ color: '#0f172a' }}>Vault Summary</h4>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <h5 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">Agent Information</h5>
+                      <h5 className="text-sm font-semibold mb-3" style={{ color: '#475569' }}>Agent Information</h5>
                       {(() => {
                         const agent = agents.find(a => a.id === selectedAgentId);
                         return agent ? (
                           <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
-                              <span>Name:</span>
-                              <span className="font-medium">{agent.name}</span>
+                              <span style={{ color: '#64748b' }}>Name:</span>
+                              <span className="font-medium" style={{ color: '#0f172a' }}>{agent.name}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span>Tier:</span>
-                              <span className="font-medium">{agent.credibilityTier}</span>
+                              <span style={{ color: '#64748b' }}>Tier:</span>
+                              <span className="font-medium" style={{ color: '#0f172a' }}>{agent.credibilityTier}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span>Score:</span>
-                              <span className="font-medium">{agent.score.overall}</span>
+                              <span style={{ color: '#64748b' }}>Score:</span>
+                              <span className="font-medium" style={{ color: '#0f172a' }}>{agent.score.overall}</span>
                             </div>
                           </div>
                         ) : null;
@@ -473,36 +477,36 @@ export function CreditVaultManager({ agents, onVaultCreated, onClose }: CreditVa
                     </div>
                     
                     <div>
-                      <h5 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">Credit Details</h5>
+                      <h5 className="text-sm font-semibold mb-3" style={{ color: '#475569' }}>Credit Details</h5>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span>Credit Limit:</span>
-                          <span className="font-medium">${parseFloat(creditLimit || '0').toLocaleString()}</span>
+                          <span style={{ color: '#64748b' }}>Credit Limit:</span>
+                          <span className="font-medium" style={{ color: '#0f172a' }}>${parseFloat(creditLimit || '0').toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Collateral Items:</span>
-                          <span className="font-medium">{collateral.length}</span>
+                          <span style={{ color: '#64748b' }}>Collateral Items:</span>
+                          <span className="font-medium" style={{ color: '#0f172a' }}>{collateral.length}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Total Collateral Value:</span>
-                          <span className="font-medium">${collateral.reduce((sum, c) => sum + c.value, 0).toLocaleString()}</span>
+                          <span style={{ color: '#64748b' }}>Total Collateral Value:</span>
+                          <span className="font-medium" style={{ color: '#0f172a' }}>${collateral.reduce((sum, c) => sum + c.value, 0).toLocaleString()}</span>
                         </div>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="mt-6 pt-6 border-t border-white/20">
-                    <h5 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">Collateral Breakdown</h5>
+                  <div className="mt-6 pt-6 border-t border-[#e2e8f0]">
+                    <h5 className="text-sm font-semibold mb-3" style={{ color: '#475569' }}>Collateral Breakdown</h5>
                     <div className="space-y-3">
                       {collateral.map((col, index) => (
-                        <div key={col.id} className="flex justify-between items-center p-3 bg-white/50 dark:bg-slate-600/50 rounded-lg">
+                        <div key={col.id} className="flex justify-between items-center p-3 bg-white dark:bg-slate-600/50 rounded-lg border border-[#e2e8f0]">
                           <div>
-                            <span className="font-medium">{col.assetType}</span>
-                            <span className="text-sm text-gray-600 dark:text-gray-400 ml-2">({col.amount} units)</span>
+                            <span className="font-medium" style={{ color: '#0f172a' }}>{col.assetType}</span>
+                            <span className="text-sm ml-2" style={{ color: '#64748b' }}>({col.amount} units)</span>
                           </div>
                           <div className="text-right">
-                            <div className="font-medium">${col.value.toLocaleString()}</div>
-                            <div className="text-sm text-gray-600 dark:text-gray-400">LTV: {col.ltvRatio}%</div>
+                            <div className="font-medium" style={{ color: '#0f172a' }}>${col.value.toLocaleString()}</div>
+                            <div className="text-sm" style={{ color: '#64748b' }}>LTV: {col.ltvRatio}%</div>
                           </div>
                         </div>
                       ))}

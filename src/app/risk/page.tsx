@@ -57,7 +57,7 @@ export default function RiskPage() {
 
   if (!isMounted) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-white dark:bg-gray-900">
         <Header />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="animate-pulse">
@@ -93,11 +93,11 @@ export default function RiskPage() {
   const selectedAgent = Array.isArray(agents) ? agents.find(a => a.id === selectedAgentId) : undefined;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900" suppressHydrationWarning>
+    <div className="min-h-screen bg-white dark:bg-gray-900" suppressHydrationWarning>
       <Header />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Risk Monitor: Agent Performance & Risk Assessment</h1>
+          <h1 className="text-3xl font-bold" style={{ color: '#0f172a' }}>Risk Monitor: Agent Performance & Risk Assessment</h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
             Monitor agent performance metrics and risk assessment data
           </p>

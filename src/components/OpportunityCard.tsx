@@ -75,32 +75,32 @@ export function OpportunityCard({ opportunity, isConnected, onDeposit, onAllocat
   };
 
   return (
-    <Card className="w-full max-w-sm bg-white dark:bg-slate-800 shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-200">
+    <Card className="w-full max-w-sm bg-white dark:bg-slate-800 shadow-sm rounded-xl overflow-hidden hover:shadow-md transition-all duration-200 border border-[#f1f5f9] dark:border-slate-700">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-2xl">{getCategoryIcon(opportunity.category || '')}</span>
-            <CardTitle className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+            <CardTitle className="text-xl font-bold tracking-tight" style={{ color: '#0f172a' }}>
               {opportunity.name}
             </CardTitle>
           </div>
           {opportunity.status && getStatusBadge(opportunity.status)}
         </div>
-        <CardDescription className="text-slate-600 dark:text-slate-400">
+        <CardDescription className="leading-relaxed" style={{ color: '#475569' }}>
           {opportunity.description}
         </CardDescription>
       </CardHeader>
       
       <CardContent className="space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">APY:</span>
-          <span className="text-lg font-bold text-green-600 dark:text-green-400">
+          <span className="text-sm font-semibold" style={{ color: '#64748b' }}>APY:</span>
+          <span className="text-lg font-bold text-[#10B981] dark:text-green-400">
             {opportunity.apy.toFixed(1)}%
           </span>
         </div>
         
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Trust Score:</span>
+          <span className="text-sm font-semibold" style={{ color: '#64748b' }}>Trust Score:</span>
           <div className="flex items-center gap-2">
             {opportunityScore && (
               <Badge 
@@ -128,8 +128,8 @@ export function OpportunityCard({ opportunity, isConnected, onDeposit, onAllocat
         
         {opportunity.tvl && (
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">TVL:</span>
-            <span className="text-md font-semibold text-slate-800 dark:text-slate-200">
+            <span className="text-sm font-semibold" style={{ color: '#64748b' }}>TVL:</span>
+            <span className="text-md font-bold" style={{ color: '#0f172a' }}>
               ${opportunity.tvl.toLocaleString()}
             </span>
           </div>
@@ -137,8 +137,8 @@ export function OpportunityCard({ opportunity, isConnected, onDeposit, onAllocat
         
         {opportunity.minDeposit && (
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Min Deposit:</span>
-            <span className="text-md font-semibold text-slate-800 dark:text-slate-200">
+            <span className="text-sm font-semibold" style={{ color: '#64748b' }}>Min Deposit:</span>
+            <span className="text-md font-bold" style={{ color: '#0f172a' }}>
               {opportunity.minDeposit} NEAR
             </span>
           </div>
@@ -146,15 +146,15 @@ export function OpportunityCard({ opportunity, isConnected, onDeposit, onAllocat
         
         {opportunity.maxDeposit && (
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Max Deposit:</span>
-            <span className="text-md font-semibold text-slate-800 dark:text-slate-200">
+            <span className="text-sm font-semibold" style={{ color: '#64748b' }}>Max Deposit:</span>
+            <span className="text-md font-bold" style={{ color: '#0f172a' }}>
               {opportunity.maxDeposit} NEAR
             </span>
           </div>
         )}
         
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Category:</span>
+          <span className="text-sm font-semibold" style={{ color: '#64748b' }}>Category:</span>
           <Badge variant="secondary">{opportunity.category}</Badge>
         </div>
 
@@ -201,7 +201,8 @@ export function OpportunityCard({ opportunity, isConnected, onDeposit, onAllocat
               <div className="space-y-2">
                 <Button 
                   onClick={() => setShowForm('deposit')}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  className="w-full text-white font-semibold shadow-sm hover:shadow-md transition-all duration-200 hover:opacity-90"
+                  style={{ backgroundColor: '#2c5bff' }}
                   disabled={opportunity.status !== 'active'}
                 >
                   📥 Deposit
@@ -209,14 +210,15 @@ export function OpportunityCard({ opportunity, isConnected, onDeposit, onAllocat
                 <div className="grid grid-cols-2 gap-2">
                   <Button 
                     onClick={() => setShowForm('allocate')}
-                    className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                    className="w-full text-white font-semibold shadow-sm hover:shadow-md transition-all duration-200 hover:opacity-90"
+                    style={{ backgroundColor: '#2c5bff' }}
                     disabled={opportunity.status !== 'active'}
                   >
                     🔄 Allocate
                   </Button>
                   <Button 
                     onClick={() => setShowForm('withdraw')}
-                    className="w-full bg-red-600 hover:bg-red-700 text-white"
+                    className="w-full bg-[#EF4444] hover:bg-[#DC2626] text-white font-semibold shadow-sm hover:shadow-md transition-all duration-200"
                     disabled={opportunity.status !== 'active'}
                   >
                     📤 Withdraw
@@ -227,7 +229,7 @@ export function OpportunityCard({ opportunity, isConnected, onDeposit, onAllocat
           </div>
         ) : (
           <Button 
-            className="w-full bg-gray-400 dark:bg-gray-600 text-white cursor-not-allowed" 
+            className="w-full bg-[#e2e8f0] dark:bg-gray-600 text-[#64748b] dark:text-white font-semibold cursor-not-allowed" 
             disabled
           >
             Connect Wallet to Interact

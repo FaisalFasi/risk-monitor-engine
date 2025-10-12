@@ -172,11 +172,11 @@ export function SwapInterface() {
   return (
     <div className="w-full max-w-lg mx-auto">
       {/* Main Swap Card */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-md border border-[#f1f5f9] dark:border-slate-700 overflow-visible">
         {/* Header */}
-        <div className="p-4 md:p-6 border-b border-slate-200 dark:border-slate-700">
+        <div className="p-4 md:p-6 border-b border-[#e2e8f0] dark:border-slate-700">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100">
+            <h2 className="text-xl md:text-2xl font-bold" style={{ color: '#0f172a' }}>
               Swap Tokens
             </h2>
             <div className="flex items-center space-x-2">
@@ -207,8 +207,8 @@ export function SwapInterface() {
           {showSettings && (
             <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Slippage Tolerance</span>
-                <span className="text-sm text-slate-600 dark:text-slate-400">{slippage}%</span>
+                <span className="text-sm font-medium" style={{ color: '#0f172a' }}>Slippage Tolerance</span>
+                <span className="text-sm" style={{ color: '#64748b' }}>{slippage}%</span>
               </div>
               <div className="flex space-x-2">
                 {[0.1, 0.5, 1.0].map((value) => (
@@ -217,9 +217,10 @@ export function SwapInterface() {
                     onClick={() => setSlippage(value)}
                     className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       slippage === value
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                        ? 'text-white'
+                        : 'bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700'
                     }`}
+                    style={slippage === value ? { backgroundColor: '#2c5bff' } : { color: '#0f172a' }}
                   >
                     {value}%
                   </button>
@@ -230,14 +231,14 @@ export function SwapInterface() {
         </div>
 
         {/* Swap Interface */}
-        <div className="p-4 md:p-6">
+        <div className="p-4 md:p-6 relative">
           {!isConnected ? (
             <div className="text-center py-12">
               <div className="text-5xl md:text-6xl mb-4">🔗</div>
-              <h3 className="text-lg md:text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
+              <h3 className="text-lg md:text-xl font-semibold mb-2" style={{ color: '#0f172a' }}>
                 Connect Your Wallet
               </h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mb-6 max-w-sm mx-auto">
+              <p className="text-sm mb-6 max-w-sm mx-auto" style={{ color: '#64748b' }}>
                 Connect your NEAR wallet to start swapping tokens with real-time market rates
               </p>
               <Button onClick={connect} size="lg" className="px-8">
@@ -247,21 +248,22 @@ export function SwapInterface() {
           ) : (
             <div className="space-y-2">
               {/* From Token */}
-              <div className="relative">
-                <div className="p-4 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/50 rounded-xl border-2 border-slate-200 dark:border-slate-700">
+              <div className="relative z-20">
+                <div className="p-4 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/50 rounded-xl border-2 border-[#e2e8f0] dark:border-slate-700">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wide">
+                    <span className="text-xs font-medium uppercase tracking-wide" style={{ color: '#64748b' }}>
                       From
                     </span>
                     <div className="flex items-center space-x-2">
                       {fromToken.symbol === 'NEAR' && account && (
                         <>
-                          <span className="text-xs text-slate-500 dark:text-slate-400">
+                          <span className="text-xs" style={{ color: '#64748b' }}>
                             Balance: {account.balance}
                           </span>
                           <button
                             onClick={handleMaxAmount}
-                            className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded text-xs font-medium hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                            className="px-2 py-1 rounded text-xs font-medium hover:opacity-90 transition-colors text-white"
+                            style={{ backgroundColor: '#2c5bff' }}
                           >
                             MAX
                           </button>
@@ -269,8 +271,8 @@ export function SwapInterface() {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center space-x-3">
-                    <input
+                  <div className="w-full flex items-center space-x-3 justify-between ">
+                     <input
                       type="text"
                       value={amount}
                       onChange={(e) => {
@@ -280,14 +282,17 @@ export function SwapInterface() {
                         }
                       }}
                       placeholder="0.0"
-                      className="flex-1 text-3xl md:text-4xl font-bold bg-transparent border-none outline-none text-slate-900 dark:text-slate-100 placeholder:text-slate-300 dark:placeholder:text-slate-600"
+                      className=" w-full text-3xl md:text-4xl font-bold   bg-transparent border-none outline-none placeholder:text-slate-300 dark:placeholder:text-slate-600 placeholder:text-slate-300 "
+                      style={{ color: '#0f172a' }}
                     />
-                    <TokenSelector
+                    <div className="flex-1 w-fit-content">
+                     <TokenSelector
                       selectedToken={fromToken}
                       onSelectToken={setFromToken}
                       excludeTokens={[toToken.id]}
                       compact={true}
-                    />
+                      /> 
+                    </div>
                   </div>
                 </div>
               </div>
@@ -306,24 +311,24 @@ export function SwapInterface() {
 
               {/* To Token */}
               <div className="relative">
-                <div className="p-4 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/50 rounded-xl border-2 border-slate-200 dark:border-slate-700">
+                <div className="p-4 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/50 rounded-xl border-2 border-[#e2e8f0] dark:border-slate-700">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wide">
+                    <span className="text-xs font-medium uppercase tracking-wide" style={{ color: '#64748b' }}>
                       To (Estimated)
                     </span>
                     {exchangeRate !== '0.00' && (
-                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                      <span className="text-xs" style={{ color: '#64748b' }}>
                         1 {fromToken.symbol} = {exchangeRate} {toToken.symbol}
                       </span>
                     )}
                   </div>
                   <div className="flex items-center space-x-3">
                     <div className="flex-1">
-                      <div className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-slate-100">
+                      <div className="text-3xl md:text-4xl font-bold">
                         {isLoadingQuote ? (
                           <span className="text-slate-400 text-2xl">Calculating...</span>
                         ) : estimatedOutput && estimatedOutput !== '0.00' && estimatedOutput !== '0' ? (
-                          <span>~{estimatedOutput}</span>
+                          <span style={{ color: '#0f172a' }}>~{estimatedOutput}</span>
                         ) : (
                           <span className="text-slate-300 dark:text-slate-600">0.0</span>
                         )}
@@ -343,13 +348,13 @@ export function SwapInterface() {
               {amount && parseFloat(amount) > 0 && !isLoadingQuote && estimatedOutput !== '0.00' && estimatedOutput !== '0' && (
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl space-y-2 text-sm">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-600 dark:text-slate-400">Expected Output</span>
-                    <span className="font-bold text-slate-900 dark:text-slate-100">
+                    <span style={{ color: '#64748b' }}>Expected Output</span>
+                    <span className="font-bold" style={{ color: '#0f172a' }}>
                       ~{estimatedOutput} {toToken.symbol}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-600 dark:text-slate-400">Price Impact</span>
+                    <span style={{ color: '#64748b' }}>Price Impact</span>
                     <span className={`font-medium ${
                       priceImpact > 5 ? 'text-red-600 dark:text-red-400' : 
                       priceImpact > 2 ? 'text-yellow-600 dark:text-yellow-400' : 
@@ -359,19 +364,19 @@ export function SwapInterface() {
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-600 dark:text-slate-400">Network Fee</span>
-                    <span className="font-medium text-slate-900 dark:text-slate-100">
+                    <span style={{ color: '#64748b' }}>Network Fee</span>
+                    <span className="font-medium" style={{ color: '#0f172a' }}>
                       ~0.001 NEAR
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-600 dark:text-slate-400">Slippage Tolerance</span>
-                    <span className="font-medium text-slate-900 dark:text-slate-100">
+                    <span style={{ color: '#64748b' }}>Slippage Tolerance</span>
+                    <span className="font-medium" style={{ color: '#0f172a' }}>
                       {slippage}%
                     </span>
                   </div>
                   {pricesLastUpdated > 0 && (
-                    <div className="pt-2 border-t border-blue-200 dark:border-blue-800 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between">
+                    <div className="pt-2 border-t border-blue-200 dark:border-blue-800 text-xs flex items-center justify-between" style={{ color: '#64748b' }}>
                       <span>Prices updated {Math.floor((Date.now() - pricesLastUpdated) / 1000)}s ago</span>
                       <span className="text-green-600 dark:text-green-400">● Live</span>
                     </div>

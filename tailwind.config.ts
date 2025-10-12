@@ -318,10 +318,57 @@ const config: Config = {
       colors: {
         background: 'var(--background)',
         foreground: 'var(--foreground)',
+        // Bond.credit Brand Colors
+        brand: {
+          primary: '#2c5bff',
+          'primary-hover': '#1e4de6',
+          'primary-light': '#EEF2FF',
+          accent: '#2c5bff',
+          'accent-hover': '#1e4de6',
+          'accent-light': '#DBEAFE',
+        },
+        // Bond.credit UI Colors
+        ui: {
+          background: '#FFFFFF',
+          'background-secondary': 'rgba(248, 250, 252, 0.5)',
+          'background-tertiary': '#F8FAFC',
+          border: '#e2e8f0',
+          'border-light': '#f1f5f9',
+          card: '#FFFFFF',
+          'card-hover': '#f8fafc',
+        },
+        // Bond.credit Text Colors
+        text: {
+          primary: '#0f172a',
+          secondary: '#475569',
+          tertiary: '#64748b',
+        },
+        // Status Colors
+        status: {
+          success: '#10B981',
+          'success-light': '#D1FAE5',
+          warning: '#F59E0B',
+          'warning-light': '#FEF3C7',
+          error: '#EF4444',
+          'error-light': '#FEE2E2',
+        },
       },
       fontFamily: {
-        sans: ['var(--font-geist-sans)', 'system-ui', 'sans-serif'],
-        mono: ['var(--font-geist-mono)', 'monospace'],
+        heading: ['var(--font-heading)', 'Space Grotesk', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-body)', 'Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        body: ['var(--font-body)', 'Inter', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-mono)', 'IBM Plex Mono', 'Consolas', 'monospace'],
+      },
+      boxShadow: {
+        'professional-sm': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+        'professional': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        'professional-md': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+        'professional-lg': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+        'professional-xl': '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
+      },
+      borderRadius: {
+        'professional': '0.75rem',
+        'professional-lg': '1rem',
       },
     },
   },

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Header } from "@/components/Header";
 import { NearLoginButton } from "@/components/NearLoginButton";
 import { useNearWallet } from "@/hooks/useNearWallet";
@@ -60,44 +61,50 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-blue-900 dark:to-indigo-900">
+    <div className="min-h-screen bg-white dark:from-slate-900 dark:via-blue-900 dark:to-indigo-900">
       <Header />
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-12 max-w-7xl" style={{ background: 'linear-gradient(180deg, #fff 0, rgba(248, 250, 252, 0.5))' }}>
         {/* Hero Section */}
-        <div className="text-center mb-12">
-          <div className="mb-6">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl mb-4 shadow-lg">
-              <span className="text-white font-bold text-2xl">B</span>
+        <div className="text-center mb-16">
+          <div className="mb-8">
+          <div className={`flex items-center justify-center overflow-hidden `}>
+              <Image 
+                src="/logo/bod.png" 
+                alt="Bond Credit Logo" 
+                width={100}
+                height={100}
+                className="w-[300px] h-full items-center object-contain p-2  "
+                priority
+              />
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-4">
-              bond.credit
-            </h1>
+           
           </div>
-          <p className="text-xl text-slate-900 dark:text-slate-200 mb-2 font-medium">
+          <p className="text-2xl mb-3 font-semibold tracking-tight" style={{ color: '#0f172a' }}>
             Credit layer for the agentic economy
           </p>
-          <p className="text-lg text-slate-800 dark:text-slate-300 mb-8 max-w-3xl mx-auto">
+          <p className="text-lg mb-10 max-w-2xl mx-auto leading-relaxed" style={{ color: '#475569' }}>
             Discover high-yield opportunities with our v0 scoring system. Earn rewards through trusted protocols.
           </p>
 
           {/* CTA Button */}
-          <div className="mb-12">
+          <div className="mb-16">
             {!isConnected ? (
               <NearLoginButton 
                 onLoginSuccess={handleLoginSuccess}
-                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                className="px-10 py-4 text-white text-lg font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 hover:opacity-90"
+                style={{ backgroundColor: '#2c5bff' }}
               />
             ) : (
               <div className="flex items-center justify-center space-x-4">
-                <div className="flex items-center space-x-2 px-6 py-3 bg-green-100 dark:bg-green-900/30 rounded-xl">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-green-700 dark:text-green-300 font-medium">
+                <div className="flex items-center space-x-3 px-6 py-3.5 bg-[#D1FAE5] dark:bg-green-900/30 rounded-xl border border-[#10B981]/20">
+                  <div className="w-2.5 h-2.5 bg-[#10B981] rounded-full animate-pulse-subtle"></div>
+                  <span className="text-[#065F46] dark:text-green-300 font-semibold">
                     Connected: {account?.accountId}
                   </span>
                 </div>
                 <button 
                   onClick={handleLogout}
-                  className="px-4 py-2 text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-100 transition-colors"
+                  className="px-5 py-3 text-[#475569] dark:text-slate-300 hover:text-[#1E293B] dark:hover:text-slate-100 font-medium transition-colors rounded-lg hover:bg-white/50"
                 >
                   Disconnect
                 </button>
@@ -110,12 +117,12 @@ export default function Home() {
         <GlobalStats />
 
         {/* Opportunities Section */}
-        <div className="mb-12">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-4">
+        <div className="mb-16">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-4 tracking-tight" style={{ color: '#0f172a' }}>
               Investment Opportunities
             </h2>
-            <p className="text-lg text-slate-800 dark:text-slate-300 max-w-2xl mx-auto">
+            <p className="text-lg max-w-2xl mx-auto leading-relaxed" style={{ color: '#475569' }}>
               Browse available opportunities with our v0 scoring system based on Performance, Reliability, and Safety
             </p>
           </div>
@@ -141,16 +148,17 @@ export default function Home() {
 
         {/* Call to Action for non-logged users */}
         {!isConnected && (
-          <div className="text-center py-12 bg-white/50 dark:bg-slate-800/50 rounded-2xl backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50">
-            <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-4">
+          <div className="text-center py-16 px-8 bg-white dark:bg-slate-800/50 rounded-2xl border border-[#e2e8f0] dark:border-slate-700/50 shadow-md">
+            <h3 className="text-3xl font-bold mb-4 tracking-tight" style={{ color: '#0f172a' }}>
               Ready to Start Earning?
             </h3>
-            <p className="text-lg text-slate-800 dark:text-slate-300 mb-6 max-w-2xl mx-auto">
+            <p className="text-lg mb-8 max-w-2xl mx-auto leading-relaxed" style={{ color: '#475569' }}>
               Connect your NEAR wallet to deposit funds, allocate to strategies, and start earning yield on your assets.
             </p>
             <NearLoginButton 
               onLoginSuccess={handleLoginSuccess}
-              className="px-8 py-4 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+              className="px-10 py-4 text-white text-lg font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 hover:opacity-90"
+              style={{ backgroundColor: '#2c5bff' }}
             />
           </div>
         )}
