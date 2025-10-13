@@ -124,12 +124,30 @@ export const TransferTokens: React.FC<TransferTokensProps> = ({ className }) => 
       // Use the balance from the account object (already available)
       const nearBalance = account.balance || '0';
       
-      setTokenBalances(prev => ({
-        ...prev,
+      // Get token balances from account.tokens array
+      const updatedBalances = {
         NEAR: parseFloat(nearBalance).toFixed(2),
-      }));
+        WNEAR: '0.00',
+        USDC: '0.00',
+        USDT: '0.00',
+      };
       
-      console.log('✅ Account balance:', nearBalance, 'NEAR');
+      // Update with actual token balances if available
+      if (account.tokens && account.tokens.length > 0) {
+        account.tokens.forEach(token => {
+          if (token.token === 'wNEAR') {
+            updatedBalances.WNEAR = token.balance;
+          } else if (token.token === 'USDC') {
+            updatedBalances.USDC = token.balance;
+          } else if (token.token === 'USDT') {
+            updatedBalances.USDT = token.balance;
+          }
+        });
+      }
+      
+      setTokenBalances(updatedBalances);
+      
+      console.log('✅ Transfer page balances updated:', updatedBalances);
     } catch (error) {
       console.error('Failed to fetch balances:', error);
       // Fallback to showing the account balance from the hook
