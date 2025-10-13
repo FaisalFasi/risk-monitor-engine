@@ -928,15 +928,11 @@ export function SwapInterface() {
       )}
 
       {/* Info Notice */}
-      <div className="mt-4 space-y-2">
+      <div className="mt-4">
         <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-500">
           <p className="text-xs text-blue-700 dark:text-blue-300">
             💱 <strong>Live Prices:</strong> Real-time rates from CoinGecko API. Click refresh icon to update.
           </p>
-        </div>
-        
-        <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded text-xs text-slate-600 dark:text-slate-400">
-          ℹ️ <strong>CORS errors in console?</strong> Those are from MyNearWallet's site, not your app. Harmless - ignore them.
         </div>
       </div>
     </div>
