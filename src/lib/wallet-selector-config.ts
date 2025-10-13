@@ -2,6 +2,7 @@ import { setupWalletSelector } from '@near-wallet-selector/core';
 import { setupModal } from '@near-wallet-selector/modal-ui';
 import { setupLedger } from '@near-wallet-selector/ledger';
 import { setupMeteorWallet } from '@near-wallet-selector/meteor-wallet';
+import { setupMyNearWallet } from '@near-wallet-selector/my-near-wallet';
 import { setupBitteWallet } from '@near-wallet-selector/bitte-wallet';
 import { setupSender } from '@near-wallet-selector/sender';
 
@@ -23,14 +24,14 @@ const NETWORK_CONFIG = {
     networkId: 'testnet' as const,
     // Using public.rpc.fastnear.com - better rate limits than official endpoint
     nodeUrl: 'https://test.rpc.fastnear.com',
-    walletUrl: 'https://wallet.meteorwallet.app',
+    walletUrl: 'https://testnet.mynearwallet.com', // MyNearWallet for testnet
     helperUrl: 'https://helper.testnet.near.org',
     explorerUrl: 'https://testnet.nearblocks.io',
   },
   mainnet: {
     networkId: 'mainnet' as const,
     nodeUrl: 'https://free.rpc.fastnear.com',
-    walletUrl: 'https://wallet.meteorwallet.app',
+    walletUrl: 'https://app.mynearwallet.com', // MyNearWallet for mainnet
     helperUrl: 'https://helper.mainnet.near.org',
     explorerUrl: 'https://nearblocks.io',
   },
@@ -89,8 +90,10 @@ export async function createWalletSelector(config?: WalletSelectorConfig) {
       },
       debug: process.env.NODE_ENV === 'development',
       modules: [
-        setupBitteWallet(),
-        setupMeteorWallet(),
+        setupMyNearWallet(),     // Popular wallet with account creation
+        setupMeteorWallet(),     // Browser extension wallet
+        setupBitteWallet(),      // Telegram wallet
+        setupSender(),           // Multi-chain wallet
       ],
     });
 

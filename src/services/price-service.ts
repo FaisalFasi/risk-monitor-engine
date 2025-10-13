@@ -21,6 +21,7 @@ export class PriceService {
   // CoinGecko IDs for tokens
   private coinGeckoIds: Record<string, string> = {
     NEAR: 'near',
+    WNEAR: 'near', // wNEAR has same price as NEAR
     WETH: 'ethereum',
     WBTC: 'bitcoin',
     USDC: 'usd-coin',
@@ -54,8 +55,11 @@ export class PriceService {
       );
 
       if (!response.ok) {
-        console.warn('CoinGecko API error, using fallback prices');
-        return this.getFallbackPrices();
+        console.warn(`CoinGecko API error (${response.status}), using fallback prices`);
+        const fallback = this.getFallbackPrices();
+        this.cache = fallback;
+        this.lastFetch = now;
+        return fallback;
       }
 
       const data = await response.json();
@@ -76,15 +80,27 @@ export class PriceService {
         prices.WNEAR = prices.NEAR;
       }
 
+      // If no prices were fetched, use fallback
+      if (Object.keys(prices).length === 0) {
+        console.warn('No prices received from API, using fallback');
+        const fallback = this.getFallbackPrices();
+        this.cache = fallback;
+        this.lastFetch = now;
+        return fallback;
+      }
+
       this.cache = prices;
       this.lastFetch = now;
       
-      console.log('✅ Live prices fetched:', prices);
+      console.log('✅ Live prices fetched:', Object.keys(prices).length, 'tokens');
       return prices;
 
     } catch (error) {
       console.error('Error fetching prices:', error);
-      return this.getFallbackPrices();
+      const fallback = this.getFallbackPrices();
+      this.cache = fallback;
+      this.lastFetch = now;
+      return fallback;
     }
   }
 
@@ -95,18 +111,30 @@ export class PriceService {
     try {
       const prices = await this.getPrices();
       
-      const fromPrice = prices[fromSymbol]?.usd || 0;
-      const toPrice = prices[toSymbol]?.usd || 1;
+      // Safe logging with null checks
+      if (prices && typeof prices === 'object') {
+        const priceList = Object.keys(prices)
+          .filter(k => prices[k]?.usd)
+          .map(k => `${k}=$${prices[k].usd.toFixed(2)}`)
+          .join(', ');
+        console.log(`📊 Available prices: ${priceList}`);
+      }
+      
+      const fromPrice = prices?.[fromSymbol]?.usd || 0;
+      const toPrice = prices?.[toSymbol]?.usd || 1;
+
+      console.log(`💰 ${fromSymbol} price: $${fromPrice}`);
+      console.log(`💰 ${toSymbol} price: $${toPrice}`);
 
       if (fromPrice === 0 || toPrice === 0) {
-        console.warn(`Missing price for ${fromSymbol} or ${toSymbol}, using fallback`);
+        console.warn(`⚠️ Missing price for ${fromSymbol} or ${toSymbol}, using fallback`);
         return this.getFallbackExchangeRate(fromSymbol, toSymbol);
       }
 
       // Calculate exchange rate
       const rate = fromPrice / toPrice;
       
-      console.log(`💱 Exchange rate: 1 ${fromSymbol} = ${rate.toFixed(4)} ${toSymbol}`);
+      console.log(`💱 Exchange rate: 1 ${fromSymbol} = ${rate.toFixed(4)} ${toSymbol} ($${fromPrice}/$${toPrice})`);
       return rate;
 
     } catch (error) {
@@ -120,17 +148,17 @@ export class PriceService {
    * These are approximate values as of Oct 2025
    */
   private getFallbackPrices(): PriceData {
-    console.log('⚠️ Using fallback prices (last known market rates)');
+    console.log('⚠️ Using fallback prices (approximate market rates as of Oct 2025)');
     
     const now = Date.now();
     return {
-      NEAR: { usd: 4.50, lastUpdated: now },
-      WNEAR: { usd: 4.50, lastUpdated: now },
+      NEAR: { usd: 2.40, lastUpdated: now },
+      WNEAR: { usd: 2.40, lastUpdated: now },
       USDC: { usd: 1.00, lastUpdated: now },
       USDT: { usd: 1.00, lastUpdated: now },
       DAI: { usd: 1.00, lastUpdated: now },
-      WETH: { usd: 2400.00, lastUpdated: now },
-      WBTC: { usd: 62000.00, lastUpdated: now },
+      WETH: { usd: 2600.00, lastUpdated: now },
+      WBTC: { usd: 67000.00, lastUpdated: now },
     };
   }
 

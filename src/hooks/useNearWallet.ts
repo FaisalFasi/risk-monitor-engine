@@ -148,74 +148,16 @@ export function useNearWallet(): NearWalletState & NearWalletActions {
 
   const getAccountBalance = async (accountId: string): Promise<string> => {
     try {
-      const selector = selectorRef.current;
-      if (!selector) {
-        console.log('Selector not available for balance fetch');
-        return '0';
-      }
-      
-      // Get the node URL from selector options
-      const network = selector.options?.network;
-      const nodeUrl = network?.nodeUrl || 'https://rpc.testnet.near.org';
-      
-      console.log('Fetching balance from:', nodeUrl);
-      
-      const response = await fetch(nodeUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          id: 'dontcare',
-          method: 'query',
-          params: {
-            request_type: 'view_account',
-            finality: 'final',
-            account_id: accountId,
-          },
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      const balance = data.result?.amount || '0';
-      return (parseFloat(balance) / 1e24).toFixed(4);
-    } catch (error) {
-      console.error('Error fetching balance:', error);
-      return '0';
-    }
-  };
-
-  const getAccountTokens = async (accountId: string): Promise<Array<{token: string, balance: string, contract: string}>> => {
-    try {
-      const selector = selectorRef.current;
-      if (!selector) {
-        console.log('Selector not available for token fetch');
-        return [];
-      }
-      
-      // Get the node URL from selector options
-      const network = selector.options?.network;
-      const nodeUrl = network?.nodeUrl || 'https://rpc.testnet.near.org';
-      
-      console.log('Fetching tokens from:', nodeUrl);
-      
-      // Common token contracts on NEAR
-      const tokenContracts = [
-        { token: 'wNEAR', contract: 'wrap.testnet' },
-        { token: 'USDC', contract: 'usdc.testnet' },
-        { token: 'USDT', contract: 'usdt.testnet' },
-        { token: 'DAI', contract: 'dai.testnet' },
+      // Use alternative RPC endpoints with CORS support
+      const rpcEndpoints = [
+        'https://test.rpc.fastnear.com',
+        'https://rpc.testnet.near.org',
       ];
-
-      const tokenBalances = [];
       
-      for (const tokenInfo of tokenContracts) {
+      for (const nodeUrl of rpcEndpoints) {
         try {
+          console.log('Fetching balance from:', nodeUrl);
+          
           const response = await fetch(nodeUrl, {
             method: 'POST',
             headers: {
@@ -226,36 +168,122 @@ export function useNearWallet(): NearWalletState & NearWalletActions {
               id: 'dontcare',
               method: 'query',
               params: {
-                request_type: 'call_function',
+                request_type: 'view_account',
                 finality: 'final',
-                account_id: tokenInfo.contract,
-                method_name: 'ft_balance_of',
-                args_base64: Buffer.from(JSON.stringify({ account_id: accountId })).toString('base64'),
+                account_id: accountId,
               },
             }),
           });
           
           if (!response.ok) {
-            console.log(`HTTP error for ${tokenInfo.token}! status: ${response.status}`);
+            console.log(`RPC ${nodeUrl} failed with status ${response.status}, trying next...`);
             continue;
           }
           
           const data = await response.json();
-          if (data.result?.result) {
-            const balance = JSON.parse(Buffer.from(data.result.result, 'base64').toString());
-            if (balance && balance !== '0') {
-              tokenBalances.push({
-                token: tokenInfo.token,
-                balance: balance,
-                contract: tokenInfo.contract,
-              });
-            }
-          }
-        } catch (tokenError) {
-          console.log(`Token ${tokenInfo.token} not found or error:`, tokenError);
+          const balance = data.result?.amount || '0';
+          const balanceFormatted = (parseFloat(balance) / 1e24).toFixed(4);
+          console.log(`✅ Balance fetched from ${nodeUrl}:`, balanceFormatted, 'NEAR');
+          return balanceFormatted;
+        } catch (err) {
+          console.log(`RPC ${nodeUrl} failed, trying next...`);
+          continue;
         }
       }
       
+      console.error('All RPC endpoints failed');
+      return '0';
+    } catch (error) {
+      console.error('Error fetching balance:', error);
+      return '0';
+    }
+  };
+
+  const getAccountTokens = async (accountId: string): Promise<Array<{token: string, balance: string, contract: string}>> => {
+    try {
+      // Use alternative RPC endpoints with better CORS support
+      const rpcEndpoints = [
+        'https://test.rpc.fastnear.com',
+        'https://rpc.testnet.near.org',
+      ];
+      
+      // Common token contracts on NEAR testnet
+      const tokenContracts = [
+        { token: 'wNEAR', contract: 'wrap.testnet', decimals: 24 },
+        { token: 'USDC', contract: 'usdc.fakes.testnet', decimals: 6 },
+        { token: 'USDT', contract: 'usdt.fakes.testnet', decimals: 6 },
+        { token: 'DAI', contract: 'dai.fakes.testnet', decimals: 18 },
+      ];
+      
+      console.log('🔍 Fetching balances for tokens:', tokenContracts.map(t => t.token).join(', '));
+
+      const tokenBalances = [];
+      
+      for (const tokenInfo of tokenContracts) {
+        let tokenFetched = false;
+        
+        // Try each RPC endpoint
+        for (const nodeUrl of rpcEndpoints) {
+          if (tokenFetched) break;
+          
+          try {
+            console.log(`Trying to fetch ${tokenInfo.token} from ${nodeUrl}...`);
+            
+            const response = await fetch(nodeUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                jsonrpc: '2.0',
+                id: 'dontcare',
+                method: 'query',
+                params: {
+                  request_type: 'call_function',
+                  finality: 'final',
+                  account_id: tokenInfo.contract,
+                  method_name: 'ft_balance_of',
+                  args_base64: Buffer.from(JSON.stringify({ account_id: accountId })).toString('base64'),
+                },
+              }),
+            });
+            
+            if (!response.ok) {
+              console.log(`HTTP error for ${tokenInfo.token} on ${nodeUrl}! status: ${response.status}`);
+              continue;
+            }
+            
+            const data = await response.json();
+            if (data.result?.result) {
+              const balanceRaw = JSON.parse(Buffer.from(data.result.result, 'base64').toString());
+              console.log(`✅ ${tokenInfo.token} raw balance:`, balanceRaw);
+              
+              // Convert from smallest unit to human-readable using token decimals
+              const decimals = tokenInfo.decimals;
+              const displayDecimals = decimals === 24 ? 4 : decimals === 18 ? 4 : 2;
+              const balanceFormatted = (parseFloat(balanceRaw) / Math.pow(10, decimals)).toFixed(displayDecimals);
+              
+              if (balanceRaw && balanceRaw !== '0') {
+                console.log(`✅ ${tokenInfo.token} formatted balance:`, balanceFormatted);
+                tokenBalances.push({
+                  token: tokenInfo.token,
+                  balance: balanceFormatted,
+                  contract: tokenInfo.contract,
+                });
+                tokenFetched = true;
+              }
+            }
+          } catch (tokenError) {
+            console.log(`Failed to fetch ${tokenInfo.token} from ${nodeUrl}:`, tokenError);
+          }
+        }
+        
+        if (!tokenFetched) {
+          console.log(`⚠️ Could not fetch ${tokenInfo.token} from any RPC endpoint`);
+        }
+      }
+      
+      console.log(`📊 Total tokens fetched: ${tokenBalances.length}`, tokenBalances.map(t => t.token).join(', '));
       return tokenBalances;
     } catch (error) {
       console.error('Error fetching token balances:', error);
@@ -399,15 +427,26 @@ export function useNearWallet(): NearWalletState & NearWalletActions {
     }
 
     try {
-      console.log('Executing transaction:', transaction);
-      
       const wallet = await selector.wallet();
       
-      // Sign and send the transaction
-      const result = await wallet.signAndSendTransaction(transaction);
-      
-      console.log('Transaction result:', result);
-      return result;
+      // Check if this is a batch of transactions (array) or single transaction
+      if (Array.isArray(transaction)) {
+        console.log(`Executing ${transaction.length} transactions in batch`);
+        
+        // For batch transactions, use signAndSendTransactions (plural)
+        const result = await wallet.signAndSendTransactions({ transactions: transaction });
+        
+        console.log('Batch transaction result:', result);
+        return result;
+      } else {
+        console.log('Executing single transaction:', transaction);
+        
+        // For single transaction, use signAndSendTransaction (singular)
+        const result = await wallet.signAndSendTransaction(transaction);
+        
+        console.log('Transaction result:', result);
+        return result;
+      }
       
     } catch (err) {
       console.error('Error executing transaction:', err);

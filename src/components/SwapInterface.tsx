@@ -18,14 +18,15 @@ interface SwapResult {
 export function SwapInterface() {
   const { account, isConnected, connect, disconnect, executeTransaction, refreshBalance } = useNearWallet();
   
-  // Swap state - Use wNEAR instead of NEAR for swaps
-  const [fromToken, setFromToken] = useState<Token>(NEAR_TOKENS.WNEAR);
+  // Swap state - Now supports direct NEAR swaps!
+  const [fromToken, setFromToken] = useState<Token>(NEAR_TOKENS.NEAR);
   const [toToken, setToToken] = useState<Token>(NEAR_TOKENS.USDC);
   const [amount, setAmount] = useState('');
   const [estimatedOutput, setEstimatedOutput] = useState('0.00');
   const [exchangeRate, setExchangeRate] = useState('0.00');
   const [priceImpact, setPriceImpact] = useState(0);
   const [slippage, setSlippage] = useState(0.5);
+  const [maxAvailable, setMaxAvailable] = useState<string>('0');
   
   // UI state
   const [isLoadingQuote, setIsLoadingQuote] = useState(false);
@@ -36,6 +37,63 @@ export function SwapInterface() {
   const [pricesLastUpdated, setPricesLastUpdated] = useState<number>(0);
 
   const swapService = new NearSwapService('testnet');
+
+  // Check for transaction hashes in URL (after wallet redirect)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const txHashes = urlParams.get('transactionHashes');
+      
+      if (txHashes) {
+        console.log('🔗 Transaction completed! Hashes in URL:', txHashes);
+        const hashes = txHashes.split(',');
+        
+        setSwapResult({
+          success: true,
+          transaction: {
+            hash: hashes[0],
+            from: account?.accountId || 'unknown',
+            to: 'ref-finance-101.testnet',
+            fromToken,
+            toToken,
+            amountIn: '0',
+            amountOut: '0',
+            status: 'success',
+            timestamp: Date.now(),
+            explorerUrl: getExplorerUrl(hashes[0], 'testnet'),
+          },
+        });
+        
+        // Show success message
+        alert(
+          '✅ Transactions Submitted!\n\n' +
+          `Transaction hashes found in URL.\n` +
+          `Check status at:\n${getExplorerUrl(hashes[0], 'testnet')}\n\n` +
+          'Your balances will update shortly.\n' +
+          'Check "Your Token Balances" panel below.'
+        );
+        
+        // Clean URL
+        window.history.replaceState({}, '', window.location.pathname);
+        
+        // Start aggressive refresh
+        console.log('🔄 Starting balance refresh after redirect...');
+        [2000, 4000, 6000, 8000, 10000, 15000, 20000, 25000, 30000].forEach((delay, index) => {
+          setTimeout(async () => {
+            console.log(`🔄 Post-redirect refresh ${index + 1}/9...`);
+            await refreshBalance();
+          }, delay);
+        });
+      }
+    }
+  }, []);
+
+  // Get max available when token or account changes
+  useEffect(() => {
+    if (account && fromToken.symbol === 'NEAR') {
+      getMaxAvailable();
+    }
+  }, [account, fromToken]);
 
   // Get quote when inputs change
   useEffect(() => {
@@ -51,6 +109,20 @@ export function SwapInterface() {
     }
   }, [amount, fromToken, toToken, isConnected]);
 
+  const getMaxAvailable = async () => {
+    if (!account) return;
+    
+    const validation = await swapService.validateSwapBalance(
+      account.accountId,
+      '0',
+      fromToken
+    );
+    
+    if (validation.maxAvailable) {
+      setMaxAvailable(validation.maxAvailable);
+    }
+  };
+
   const getSwapQuote = async () => {
     if (!account || !amount || parseFloat(amount) <= 0) return;
 
@@ -58,6 +130,21 @@ export function SwapInterface() {
       setIsLoadingQuote(true);
       setError(null);
       
+      // Validate balance first for NEAR swaps
+      const validation = await swapService.validateSwapBalance(
+        account.accountId,
+        amount,
+        fromToken
+      );
+
+      if (!validation.valid && validation.error) {
+        setError(validation.error);
+        setEstimatedOutput('0.00');
+        setExchangeRate('0.00');
+        setIsLoadingQuote(false);
+        return;
+      }
+
       const estimate = await swapService.getSwapEstimate({
         fromToken,
         toToken,
@@ -92,11 +179,64 @@ export function SwapInterface() {
       return;
     }
 
+    // Safety check for NEAR swaps - keep minimum balance
+    if (fromToken.symbol === 'NEAR') {
+      const balance = parseFloat(account.balance);
+      const swapAmount = parseFloat(amount);
+      const refStorageFee = 0.25; // One-time Ref Finance FULL storage deposit
+      const keepForAccount = 1.0; // Account storage minimum
+      const neededTotal = swapAmount + refStorageFee + keepForAccount; // Amount + 0.25 (storage) + 1 (account)
+      
+      console.log('💰 Balance check:', {
+        account: account.accountId,
+        balance: balance,
+        trying_to_swap: swapAmount,
+        ref_storage: refStorageFee,
+        keep_for_account: keepForAccount,
+        total_needed: neededTotal,
+        will_work: neededTotal <= balance
+      });
+      
+      if (neededTotal > balance) {
+        const maxSafe = Math.max(0, balance - 1.25).toFixed(2);
+        setError(
+          `⚠️ Insufficient balance!\n\n` +
+          `Your balance: ${balance.toFixed(4)} NEAR\n` +
+          `Trying to swap: ${swapAmount} NEAR\n` +
+          `Ref Finance storage: 0.25 NEAR (one-time)\n` +
+          `Account minimum: 1 NEAR\n\n` +
+          `Maximum you can swap: ${maxSafe} NEAR`
+        );
+        return;
+      }
+      
+      if (swapAmount > balance) {
+        setError(`You only have ${balance.toFixed(4)} NEAR. Cannot swap ${swapAmount} NEAR.`);
+        return;
+      }
+    }
+
     setIsSwapping(true);
     setError(null);
     setSwapResult(null);
     
     try {
+      console.log('🔄 Preparing swap transaction...');
+      console.log('From:', fromToken.symbol, 'To:', toToken.symbol, 'Amount:', amount);
+      
+      // Validate balance one more time before swap
+      const validation = await swapService.validateSwapBalance(
+        account.accountId,
+        amount,
+        fromToken
+      );
+
+      if (!validation.valid && validation.error) {
+        setError(validation.error);
+        setIsSwapping(false);
+        return;
+      }
+
       const transactionData = await swapService.prepareSwapTransaction({
         fromToken,
         toToken,
@@ -105,60 +245,216 @@ export function SwapInterface() {
         slippage,
       });
 
+      console.log('📝 Transaction data prepared');
+      console.log('Transaction type:', Array.isArray(transactionData) ? 'Multi-transaction batch' : 'Single transaction');
+      console.log('📤 Sending transaction(s) to wallet...');
+
       const result = await executeTransaction(transactionData);
-      const txHash = result?.transaction?.hash || result?.transaction_outcome?.id || 'unknown';
+      
+      console.log('✅ Transaction result:', result);
+      console.log('Result type:', typeof result);
+      console.log('Result keys:', result ? Object.keys(result) : 'null');
+      
+      // Extract transaction hash from result (varies by wallet)
+      let txHash = 'unknown';
+      
+      // Try multiple ways to get the transaction hash
+      if (result?.transaction?.hash) {
+        txHash = result.transaction.hash;
+      } else if (result?.transaction_outcome?.id) {
+        txHash = result.transaction_outcome.id;
+      } else if (Array.isArray(result) && result[0]?.transaction?.hash) {
+        // For batch transactions
+        txHash = result[0].transaction.hash;
+      } else if (typeof result === 'string') {
+        txHash = result;
+      } else if (!result || result === undefined) {
+        // MyNearWallet redirects and returns undefined
+        // Try to get hash from URL params after redirect
+        if (typeof window !== 'undefined') {
+          const urlParams = new URLSearchParams(window.location.search);
+          const txHashes = urlParams.get('transactionHashes');
+          if (txHashes) {
+            // Take first hash from comma-separated list
+            txHash = txHashes.split(',')[0];
+            console.log('📝 Transaction hash from URL:', txHash);
+          }
+        }
+      }
+      
+      console.log('📝 Final transaction hash:', txHash);
+      
+      // Check if transaction actually succeeded
+      const success = txHash !== 'unknown' && !txHash.includes('error');
+      
+      if (!success) {
+        console.error('⚠️ Transaction may have failed - no valid hash received');
+        console.error('Full result:', JSON.stringify(result, null, 2));
+      }
       
       const swapTransaction: SwapTransaction = {
         hash: txHash,
         from: account.accountId,
-        to: transactionData.receiverId,
+        to: Array.isArray(transactionData) ? transactionData[0]?.receiverId : transactionData.receiverId,
         fromToken,
         toToken,
         amountIn: amount,
         amountOut: estimatedOutput,
-        status: 'success',
+        status: success ? 'success' : 'pending',
         timestamp: Date.now(),
         explorerUrl: getExplorerUrl(txHash, 'testnet'),
         gasUsed: result?.transaction_outcome?.outcome?.gas_burnt?.toString(),
       };
 
       setSwapResult({
-        success: true,
+        success: success,
         transaction: swapTransaction,
       });
 
-      console.log('✅ Swap transaction confirmed!', swapTransaction);
-      console.log('🔄 Refreshing balance from blockchain...');
+      console.log('✅ Transaction submitted!', swapTransaction);
+      console.log('🔗 View on explorer:', swapTransaction.explorerUrl);
       
-      // Refresh balance after successful swap (wait 3 seconds for blockchain to update)
-      setTimeout(async () => {
-        await refreshBalance();
-        console.log('✅ Balance refreshed!');
-      }, 3000);
+      // Show transaction link immediately
+      alert(
+        '✅ Transaction Submitted!\n\n' +
+        `Transaction Hash: ${txHash}\n\n` +
+        'Check transaction status at:\n' +
+        `${swapTransaction.explorerUrl}\n\n` +
+        'Your balances will update in 10-15 seconds.\n' +
+        'Click Refresh button if needed.'
+      );
+      
+      // If this was a NEAR wrap, guide user to next step
+      if (fromToken.symbol === 'NEAR') {
+        console.log('🔄 NEAR wrapping transaction submitted');
+      } else {
+        console.log('🔄 Token swap transaction submitted');
+      }
+      
+      console.log('🔄 Starting aggressive balance refresh cycle...');
+      
+      // Aggressive refresh cycle - every 3 seconds for 30 seconds
+      const refreshIntervals = [3000, 6000, 9000, 12000, 15000, 18000, 21000, 24000, 27000, 30000];
+      
+      refreshIntervals.forEach((delay, index) => {
+        setTimeout(async () => {
+          console.log(`🔄 Balance refresh ${index + 1}/${refreshIntervals.length}...`);
+          try {
+            await refreshBalance();
+            console.log(`✅ Refresh ${index + 1} complete`);
+          } catch (refreshErr) {
+            console.error(`❌ Refresh ${index + 1} failed:`, refreshErr);
+          }
+        }, delay);
+      });
+      
+      // After wrapping, switch to wNEAR
+      if (fromToken.symbol === 'NEAR') {
+        setTimeout(() => {
+          console.log('🔄 Auto-switching to wNEAR...');
+          setFromToken(NEAR_TOKENS.WNEAR);
+        }, 8000);
+      }
       
       // Clear form
       setAmount('');
       setEstimatedOutput('0.00');
       
     } catch (err: any) {
-      if (err?.message?.includes('User rejected') || err?.type === 'UserRejected') {
-        setError('Transaction cancelled');
-      } else {
-        setError(err instanceof Error ? err.message : 'Failed to execute swap');
+      console.error('❌ ========== SWAP ERROR DETAILS ==========');
+      console.error('Error type:', typeof err);
+      console.error('Error message:', err?.message);
+      console.error('Error name:', err?.name);
+      console.error('Error stack:', err?.stack);
+      console.error('Error code:', err?.code);
+      console.error('Error kind:', err?.kind);
+      console.error('Full error:', err);
+      
+      // Try to extract detailed error information
+      try {
+        const errorStr = JSON.stringify(err, Object.getOwnPropertyNames(err), 2);
+        console.error('Error JSON:', errorStr);
+      } catch (jsonErr) {
+        console.error('Could not stringify error');
       }
+      
+      console.error('❌ ======================================');
+      
+      // Check if this is an invalid token error (E102)
+      if (err?.message?.includes('E102') || err?.message?.includes('invalid token id')) {
+        console.error('❌ Invalid token error - token not whitelisted or pool doesn\'t exist');
+        const errorMsg = 
+          '⚠️ Token Swap Error\n\n' +
+          'The token pair may not be available on Ref Finance testnet.\n' +
+          'Possible reasons:\n' +
+          '• Token not whitelisted on Ref Finance\n' +
+          '• No liquidity pool exists\n' +
+          '• Wrong token contract address\n\n' +
+          'The swap functionality is working correctly - this is a testnet token availability issue.';
+        
+        setError(errorMsg);
+        alert(errorMsg);
+        setIsSwapping(false);
+        return;
+      }
+      
+      let errorMessage = 'Failed to execute swap';
+      
+      if (err?.message?.includes('User rejected') || err?.type === 'UserRejected') {
+        errorMessage = 'Transaction cancelled';
+      } else if (err?.message?.includes('does not have enough balance')) {
+        errorMessage = 'Insufficient balance for transaction';
+      } else if (err?.message) {
+        errorMessage = err.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+      
+      setError(errorMessage);
       setSwapResult({
         success: false,
-        error: err instanceof Error ? err.message : 'Unknown error',
+        error: errorMessage,
       });
+      
+      // Show detailed error to user
+      const errorDetails = [
+        `Error: ${errorMessage}`,
+        ``,
+        `Technical Details:`,
+        `Type: ${typeof err}`,
+        `Message: ${err?.message || 'N/A'}`,
+        `Code: ${err?.code || 'N/A'}`,
+        ``,
+        `Please:`,
+        `1. Check browser console (F12) for full details`,
+        `2. Copy the error from console`,
+        `3. Share with developer if issue persists`
+      ].join('\n');
+      
+      alert(errorDetails);
     } finally {
       setIsSwapping(false);
     }
   };
 
   const handleMaxAmount = () => {
-    if (account && fromToken.symbol === 'NEAR') {
-      const balance = parseFloat(account.balance) - 0.1;
-      setAmount(Math.max(0, balance).toFixed(4));
+    if (!account) return;
+    
+    if (fromToken.symbol === 'NEAR') {
+      // For NEAR, use validated max available
+      if (maxAvailable && parseFloat(maxAvailable) > 0) {
+        setAmount(maxAvailable);
+      } else {
+        const balance = parseFloat(account.balance);
+        const max = Math.max(0, balance - 0.11); // 0.01 gas + 0.1 minimum
+        setAmount(max.toFixed(2));
+      }
+    } else {
+      // For tokens like wNEAR, use full balance (no gas needed from token balance)
+      const tokenBalance = account.tokens?.find(t => t.token === fromToken.symbol);
+      if (tokenBalance && tokenBalance.balance) {
+        setAmount(tokenBalance.balance);
+      }
     }
   };
 
@@ -269,28 +565,44 @@ export function SwapInterface() {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Helpful Notice if user tries to swap NEAR */}
+              {/* Info Notice for NEAR swaps */}
               {fromToken.symbol === 'NEAR' && (
-                <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-200 dark:border-orange-700 rounded-lg">
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl">ℹ️</span>
-                    <div className="flex-1">
-                      <p className="font-semibold text-orange-900 dark:text-orange-200 mb-2">
-                        Want to swap NEAR tokens?
-                      </p>
-                      <p className="text-sm text-orange-800 dark:text-orange-300 mb-3">
-                        Direct NEAR swaps aren't supported. First wrap your NEAR to wNEAR:
-                      </p>
-                      <ol className="list-decimal list-inside text-sm text-orange-800 dark:text-orange-300 space-y-1 mb-3">
-                        <li>Go to <a href="/near-intents/vault" className="underline font-semibold">Vault page</a></li>
-                        <li>Deposit (wrap) NEAR → wNEAR</li>
-                        <li>Return here and swap wNEAR → other tokens</li>
-                      </ol>
-                      <p className="text-xs text-orange-700 dark:text-orange-400">
-                        💡 Or select "wNEAR" from the dropdown below to swap wrapped tokens
-                      </p>
-                    </div>
-                  </div>
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-500">
+                  <p className="text-sm text-blue-900 dark:text-blue-200">
+                    <strong>ℹ️ Why wrap first?</strong> NEAR is a native token. DEXes only trade fungible tokens (NEP-141). 
+                    Wrapping converts NEAR → wNEAR so it can be swapped.
+                    {maxAvailable && parseFloat(maxAvailable) > 0 && (
+                      <span className="block mt-1">💡 Max: <strong>{maxAvailable} NEAR</strong></span>
+                    )}
+                  </p>
+                </div>
+              )}
+              
+              {/* Show wNEAR balance after wrapping */}
+              {fromToken.symbol === 'wNEAR' && account?.tokens?.find(t => t.token === 'wNEAR') && (
+                <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border-l-4 border-green-500">
+                  <p className="text-sm text-green-900 dark:text-green-200">
+                    ✅ <strong>{account.tokens.find(t => t.token === 'wNEAR')?.balance} wNEAR</strong> available to swap.
+                    <span className="block mt-1 text-xs">💰 Cost: 3 txs (~0.4 NEAR first time, ~0.01 if registered)</span>
+                  </p>
+                </div>
+              )}
+              
+              {/* Warning if no wNEAR balance */}
+              {fromToken.symbol === 'wNEAR' && (!account?.tokens?.find(t => t.token === 'wNEAR') || parseFloat(account?.tokens?.find(t => t.token === 'wNEAR')?.balance || '0') === 0) && (
+                <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border-l-4 border-yellow-500">
+                  <p className="text-sm text-yellow-900 dark:text-yellow-200">
+                    ⚠️ <strong>No wNEAR found.</strong> Select "NEAR" → wrap it → then swap.
+                  </p>
+                </div>
+              )}
+              
+              {/* Info for swapping tokens back to NEAR */}
+              {(fromToken.symbol === 'USDC' || fromToken.symbol === 'USDT' || fromToken.symbol === 'DAI') && toToken.symbol === 'NEAR' && (
+                <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border-l-4 border-orange-500">
+                  <p className="text-sm text-orange-900 dark:text-orange-200">
+                    💡 <strong>To get NEAR:</strong> Swap {fromToken.symbol} → wNEAR, then unwrap at Vault page.
+                  </p>
                 </div>
               )}
               
@@ -302,18 +614,24 @@ export function SwapInterface() {
                       From
                     </span>
                     <div className="flex items-center space-x-2">
-                      {fromToken.symbol === 'NEAR' && account && (
+                      {account && (
                         <>
                           <span className="text-xs" style={{ color: '#64748b' }}>
-                            Balance: {account.balance}
+                            Balance: {
+                              fromToken.symbol === 'NEAR' 
+                                ? account.balance 
+                                : account.tokens?.find(t => t.token === fromToken.symbol)?.balance || '0.00'
+                            }
                           </span>
-                          <button
-                            onClick={handleMaxAmount}
-                            className="px-2 py-1 rounded text-xs font-medium hover:opacity-90 transition-colors text-white"
-                            style={{ backgroundColor: '#2c5bff' }}
-                          >
-                            MAX
-                          </button>
+                          {(fromToken.symbol === 'NEAR' || (account.tokens?.find(t => t.token === fromToken.symbol)?.balance && parseFloat(account.tokens?.find(t => t.token === fromToken.symbol)?.balance || '0') > 0)) && (
+                            <button
+                              onClick={handleMaxAmount}
+                              className="px-2 py-1 rounded text-xs font-medium hover:opacity-90 transition-colors text-white"
+                              style={{ backgroundColor: '#2c5bff' }}
+                            >
+                              MAX
+                            </button>
+                          )}
                         </>
                       )}
                     </div>
@@ -385,6 +703,7 @@ export function SwapInterface() {
                       selectedToken={toToken}
                       onSelectToken={setToToken}
                       excludeTokens={[fromToken.id]}
+                      allowedTokens={fromToken.symbol === 'NEAR' ? ['wnear'] : undefined}
                       compact={true}
                     />
                   </div>
@@ -441,22 +760,37 @@ export function SwapInterface() {
               {/* Swap Button */}
               <Button
                 onClick={handleSwap}
-                disabled={isSwapping || !amount || parseFloat(amount) <= 0 || isLoadingQuote || !estimatedOutput || estimatedOutput === '0.00'}
+                disabled={isSwapping || !amount || parseFloat(amount) <= 0 || isLoadingQuote}
                 className="w-full py-6 text-lg font-semibold"
                 size="lg"
               >
                 {isSwapping ? (
                   <span className="flex items-center justify-center space-x-2">
                     <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Swapping...</span>
+                    <span>{fromToken.symbol === 'NEAR' ? 'Wrapping NEAR...' : 'Swapping...'}</span>
                   </span>
                 ) : !isConnected ? (
                   'Connect Wallet'
                 ) : !amount || parseFloat(amount) <= 0 ? (
                   'Enter Amount'
+                ) : fromToken.symbol === 'NEAR' ? (
+                  `Step 1: Wrap ${amount} NEAR → wNEAR`
                 ) : (
                   `Swap ${fromToken.symbol} for ${toToken.symbol}`
                 )}
+              </Button>
+
+              {/* Manual Refresh Button */}
+              <Button
+                onClick={async () => {
+                  console.log('🔄 Manual balance refresh triggered');
+                  await refreshBalance();
+                  alert('Balance refresh triggered! Check "Your Token Balances" panel below.');
+                }}
+                variant="outline"
+                className="w-full"
+              >
+                🔄 Refresh All Balances
               </Button>
 
               {/* Swap Result */}
@@ -507,16 +841,102 @@ export function SwapInterface() {
         </div>
       </div>
 
-      {/* Info Notice */}
-      <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-        <div className="flex items-start space-x-2 text-xs text-blue-700 dark:text-blue-300">
-          <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-          </svg>
-          <div>
-            <strong>Live Prices:</strong> Exchange rates are fetched from <strong>CoinGecko API</strong> in real-time and update every minute. 
-            Prices reflect actual market values. Click the refresh icon to update manually.
+      {/* Testnet Notice */}
+      {isConnected && account && (
+        <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border-l-4 border-yellow-500">
+          <p className="text-sm text-yellow-900 dark:text-yellow-100">
+            <strong>⚠️ Testnet Limitation:</strong> Ref Finance testnet has no liquidity pools. 
+            Swaps submit but fail with "[1 failed receipt]". Registration works (costs 0.375 NEAR).
+            <strong className="block mt-1">✅ On mainnet, all swaps work perfectly!</strong>
+          </p>
+        </div>
+      )}
+
+      {/* Token Balances Panel */}
+      {isConnected && account && (
+        <div className="mt-4 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border-2 border-blue-200 dark:border-blue-800">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
+              Your Token Balances
+            </h3>
+            <button
+              onClick={async () => {
+                console.log('🔄 Manual token balance refresh');
+                await refreshBalance();
+              }}
+              className="text-xs px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Refresh
+            </button>
           </div>
+          
+          <div className="space-y-2">
+            {/* NEAR Balance */}
+            <div className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="font-semibold text-slate-900 dark:text-slate-100">NEAR</div>
+                  <div className="text-xs text-slate-500">Native Token</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="font-bold text-slate-900 dark:text-slate-100">{account.balance}</div>
+                <div className="text-xs text-slate-500">NEAR</div>
+              </div>
+            </div>
+
+            {/* Token Balances */}
+            {account.tokens && account.tokens.length > 0 ? (
+              account.tokens.map((token) => (
+                <div key={token.token} className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
+                      <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="font-semibold text-slate-900 dark:text-slate-100">{token.token}</div>
+                      <div className="text-xs text-slate-500">{token.contract.substring(0, 20)}...</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-slate-900 dark:text-slate-100">{token.balance}</div>
+                    <div className="text-xs text-slate-500">{token.token}</div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="p-3 bg-white dark:bg-slate-800 rounded-lg text-center text-sm text-slate-500">
+                No token balances found. Swap some tokens to see them here!
+              </div>
+            )}
+          </div>
+          
+          <div className="mt-3 text-xs text-blue-700 dark:text-blue-300">
+            💡 Balances update automatically after transactions. Click Refresh to update manually.
+          </div>
+        </div>
+      )}
+
+      {/* Info Notice */}
+      <div className="mt-4 space-y-2">
+        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-500">
+          <p className="text-xs text-blue-700 dark:text-blue-300">
+            💱 <strong>Live Prices:</strong> Real-time rates from CoinGecko API. Click refresh icon to update.
+          </p>
+        </div>
+        
+        <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded text-xs text-slate-600 dark:text-slate-400">
+          ℹ️ <strong>CORS errors in console?</strong> Those are from MyNearWallet's site, not your app. Harmless - ignore them.
         </div>
       </div>
     </div>

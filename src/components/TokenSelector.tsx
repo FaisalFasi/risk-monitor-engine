@@ -11,6 +11,7 @@ interface TokenSelectorProps {
   label?: string;
   disabled?: boolean;
   excludeTokens?: string[]; // Token IDs to exclude
+  allowedTokens?: string[]; // If provided, only these token IDs are allowed
   compact?: boolean;
 }
 
@@ -70,14 +71,20 @@ export function TokenSelector({
   label = 'Select Token',
   disabled = false,
   excludeTokens = [],
+  allowedTokens,
   compact = false
 }: TokenSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const availableTokens = Object.values(NEAR_TOKENS).filter(
-    token => !excludeTokens.includes(token.id)
-  );
+  const availableTokens = Object.values(NEAR_TOKENS).filter(token => {
+    // If allowedTokens is specified, only show those tokens
+    if (allowedTokens && allowedTokens.length > 0) {
+      return allowedTokens.includes(token.id);
+    }
+    // Otherwise, show all tokens except excluded ones
+    return !excludeTokens.includes(token.id);
+  });
 
   const handleSelectToken = (token: Token) => {
     onSelectToken(token);
