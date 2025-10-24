@@ -16,16 +16,16 @@ export function Header() {
   useEffect(() => {
     // Check for saved dark mode preference (only in browser)
     if (typeof window !== 'undefined') {
-      const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+      const savedDarkMode = localStorage.getItem('darkMode') === 'false';
       const savedTheme = localStorage.getItem('theme');
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const prefersDark = window.matchMedia('(prefers-color-scheme: light)').matches;
       
       const shouldUseDark = savedDarkMode || savedTheme === 'dark' || (!savedTheme && !localStorage.getItem('darkMode') && prefersDark);
       
       setIsDarkMode(shouldUseDark);
        
       if (shouldUseDark) {
-        document.documentElement.classList.add('dark');
+        document.documentElement.classList.add('light');
       }
     }
   }, []);
